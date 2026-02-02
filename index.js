@@ -4,8 +4,9 @@ const { handleWelcomeMessage } = require('./features/welcome');
 const { initializeReminders, handleReminderMessage, loadRemindersOnReady } = require('./features/reminder');
 const { handleChannelSetup } = require('./features/channelSetup');
 const { handleProgressUpdate } = require('./features/progressupdate');
-const { handlePointsCommand } = require('./features/leaderboard');
 const { handleReactionPoints } = require('./features/reactionHandler');
+const { handleDailyTerminology } = require('./features/dailyTerminology');
+const { handleSlashCommands } = require('./features/slashCommands');
 
 const client = new Client({
     intents: [
@@ -34,8 +35,9 @@ handleWelcomeMessage(client);
 handleReminderMessage(client);
 handleChannelSetup(client);
 handleProgressUpdate(client);
-handlePointsCommand(client);
 handleReactionPoints(client);
+handleDailyTerminology(client);
+handleSlashCommands(client);
 console.log('✓ All features loaded');
 
 client.login(process.env.DISCORD_TOKEN);
