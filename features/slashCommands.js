@@ -1,7 +1,8 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { loadPoints, buildLeaderboardEmbed, getLeaderboardButtons, buildMyPointsEmbed } = require('./leaderboard');
+const { buildLeaderboardEmbed, getLeaderboardButtons, buildMyPointsEmbed } = require('./leaderboard');
 const { loadTerminologies, postDailyTerminology } = require('./dailyTerminology');
 const { parseReminderContent, addReminder, generateReminderId, formatDateTime } = require('./reminder');
+const { getLeaderboard, getMember, getPoints, initializePoints } = require('../database/db');
 
 // Cache for guild members to avoid rate limiting
 const memberCache = new Map();
@@ -16,7 +17,6 @@ function buildHelpEmbed() {
             { name: '/leaderboard', value: 'Show top 10 users.' },
             { name: '/mypoints', value: 'Show your personal points and last update.' },
             { name: '/terminology', value: 'Show today\'s terminology.' },
-            { name: '/term', value: 'Alias for /terminology.' },
             { name: '/next', value: 'Preview the next terminology (without changing today\'s).' },
             { name: '/prev', value: 'Preview the previous terminology.' },
             { name: '/remind', value: 'Set a reminder (e.g., "submit assignment tomorrow at 6 PM").' },
@@ -104,9 +104,6 @@ function buildCommands() {
             .setName('terminology')
             .setDescription('Show today\'s terminology.'),
         new SlashCommandBuilder()
-            .setName('term')
-            .setDescription('Alias for /terminology.'),
-        new SlashCommandBuilder()
             .setName('next')
             .setDescription('Preview the next terminology (without changing today\'s).'),
         new SlashCommandBuilder()
@@ -169,18 +166,14 @@ function handleSlashCommands(client) {
             if (interaction.customId.startsWith('leaderboard_')) {
                 const [, direction, page] = interaction.customId.split('_');
                 const currentPage = parseInt(page);
-                const points = loadPoints();
-                
-                // Get cached members or use what's available
-                const cachedMembers = memberCache.get(interaction.guildId) || 
-                                     Array.from(interaction.guild.members.cache.values());
-                const totalPages = Math.ceil(cachedMembers.length / 10);
+                const leaderboardData = await getLeaderboard();
+                const totalPages = Math.ceil(leaderboardData.length / 10);
                 
                 let newPage = currentPage;
                 if (direction === 'next') newPage = Math.min(currentPage + 1, totalPages);
                 if (direction === 'back') newPage = Math.max(currentPage - 1, 1);
 
-                const embed = buildLeaderboardEmbed(points, newPage, cachedMembers);
+                const embed = buildLeaderboardEmbed(leaderboardData, newPage);
                 const buttons = getLeaderboardButtons(newPage, totalPages);
 
                 return interaction.update({ embeds: [embed], components: [buttons] });
@@ -197,32 +190,25 @@ function handleSlashCommands(client) {
         }
 
         if (commandName === 'leaderboard') {
-            const points = loadPoints();
+            const leaderboardData = await getLeaderboard();
             
-            // Get cached members or use what's available
-            const cachedMembers = memberCache.get(interaction.guildId) || 
-                                 Array.from(interaction.guild.members.cache.values());
-            
-            const totalPages = Math.ceil(cachedMembers.length / 10);
-            const embed = buildLeaderboardEmbed(points, 1, cachedMembers);
+            const totalPages = Math.ceil(leaderboardData.length / 10);
+            const embed = buildLeaderboardEmbed(leaderboardData, 1);
             const buttons = getLeaderboardButtons(1, totalPages);
 
             return interaction.reply({ embeds: [embed], components: [buttons] });
         }
 
         if (commandName === 'mypoints') {
-            const points = loadPoints();
-            const userPoints = points[interaction.user.id];
+            await initializePoints(interaction.user.id);
+            const memberData = await getMember(interaction.user.id);
+            const pointsData = await getPoints(interaction.user.id);
 
-            if (!userPoints) {
-                return interaction.reply('📊 You don\'t have any points yet! Post in #blitz-daily-progress to earn points.');
-            }
-
-            const embed = buildMyPointsEmbed(userPoints);
+            const embed = buildMyPointsEmbed(memberData, { points: pointsData, last_update: new Date().toISOString() });
             return interaction.reply({ embeds: [embed] });
         }
 
-        if (commandName === 'terminology' || commandName === 'term') {
+        if (commandName === 'terminology') {
             const embed = getTerminologyEmbed();
 
             if (!embed) {
