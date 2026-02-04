@@ -76,13 +76,18 @@ BeliX/
 ├── index.js                          # Main bot entry point
 ├── package.json                      # Dependencies and metadata
 ├── README.md                         # This file
-├── memberSyncState.json              # Member sync state tracking
-├── reminders.json                    # Reminder configurations
 │
 ├── database/
 │   ├── db.js                        # Database operations (SQLite)
 │   ├── insertMembers.js             # Member data insertion
 │   └── schema.sql                   # Database schema
+│
+├── json/
+│   ├── memberSyncState.json         # Member sync state tracking
+│   ├── reminders.json               # Reminder configurations
+│   ├── dailyQuestion.json           # Daily coding questions
+│   ├── points.json                  # User points tracking
+│   └── terminologies.json           # Daily tech terminologies
 │
 ├── features/
 │   ├── birthdayAnnouncement.js      # Birthday announcements
