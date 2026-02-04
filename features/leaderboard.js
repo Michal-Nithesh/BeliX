@@ -17,8 +17,8 @@ function buildLeaderboardEmbed(leaderboardData, page = 1) {
     });
 
     // Handle empty leaderboard
-    if (!leaderboardText) {
-        leaderboardText = 'No leaderboard data available yet. Start earning points!';
+    if (!leaderboardText || leaderboardData.length === 0) {
+        leaderboardText = 'No members in this guild yet. Members will appear here once they join!';
     }
 
     return new EmbedBuilder()
@@ -45,14 +45,20 @@ function getLeaderboardButtons(page = 1, totalPages = 1) {
 }
 
 function buildMyPointsEmbed(memberData, pointsData) {
+    const username = memberData?.display_name || memberData?.username || 'Unknown';
+    const totalPoints = pointsData?.points || 0;
+    const lastUpdate = pointsData?.last_update ? new Date(pointsData.last_update).toLocaleString() : 'Never';
+    
     return new EmbedBuilder()
         .setColor('#00ff00')
-        .setTitle('📊 Your Points')
+        .setTitle('📊 Your Points & Statistics')
+        .setDescription(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━`)
         .addFields(
-            { name: 'Username', value: memberData?.display_name || memberData?.username || 'Unknown', inline: true },
-            { name: 'Total Points', value: `${pointsData?.points || 0}`, inline: true },
-            { name: 'Last Update', value: pointsData?.last_update ? new Date(pointsData.last_update).toLocaleString() : 'Never', inline: false }
+            { name: '👤 Username', value: `\`${username}\``, inline: false },
+            { name: '⭐ Total Points', value: `\`\`\`${totalPoints} points\`\`\``, inline: false },
+            { name: '📅 Last Update', value: `\`${lastUpdate}\``, inline: false }
         )
+        .setFooter({ text: 'Keep earning points to climb the leaderboard! 🚀' })
         .setTimestamp();
 }
 

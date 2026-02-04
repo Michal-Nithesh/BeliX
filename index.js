@@ -10,6 +10,7 @@ const { handleMemberSync } = require('./features/memberSync');
 const { handleBirthdayAnnouncement } = require('./features/birthdayAnnouncement');
 const { handleScheduledReminders } = require('./features/scheduledReminders');
 const { setupDailyQuestion } = require('./features/dailyQuestionPoster');
+const { handleGatheringScheduler } = require('./features/dailyGatheringScheduler');
 
 const client = new Client({
     intents: [
@@ -43,6 +44,7 @@ handleMemberSync(client);
 handleBirthdayAnnouncement(client);
 handleScheduledReminders(client);
 setupDailyQuestion(client);
+handleGatheringScheduler(client);
 console.log('✓ All features loaded');
 
 client.login(process.env.DISCORD_TOKEN);

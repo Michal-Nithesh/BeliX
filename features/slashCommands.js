@@ -21,7 +21,8 @@ function buildHelpEmbed() {
             { name: '/next', value: 'Preview the next terminology (without changing today\'s).' },
             { name: '/prev', value: 'Preview the previous terminology.' },
             { name: '/dailyquestions', value: 'Browse daily programming questions with pagination.' },
-            { name: '/question <number>', value: 'View a specific question (1-129) with full details.' }
+            { name: '/question <number>', value: 'View a specific question (1-129) with full details.' },
+            { name: '/qd <difficulty>', value: 'Filter questions by difficulty level (Easy/Medium).' }
         )
         .setTimestamp();
 }
@@ -108,7 +109,7 @@ function buildQuestionsEmbed(questions, startIndex = 0, itemsPerPage = 5) {
     
     questions_list.forEach(q => {
         const value = `**Input:** ${q.Input}\n**Output:** ${q.Output}`;
-        embed.addField(`Day ${q.Day}: ${q.Question}`, value, false);
+        embed.addFields({ name: `Day ${q.Day}: ${q.Question}`, value: value, inline: false });
     });
     
     return embed;
@@ -156,8 +157,12 @@ function buildQuestionDetailEmbed(question) {
             { name: '📝 Explanation', value: question.Explain, inline: false }
         );
     
+    if (question.Difficulty) {
+        embed.addFields({ name: '⭐ Difficulty', value: question.Difficulty, inline: true });
+    }
+    
     if (question.Formula) {
-        embed.addField('📐 Formula', question.Formula, false);
+        embed.addFields({ name: '📐 Formula', value: question.Formula, inline: false });
     }
     
     if (question.Method) {
@@ -171,6 +176,61 @@ function buildQuestionDetailEmbed(question) {
     embed.setTimestamp();
     
     return embed;
+}
+
+function buildDifficultyQuestionsEmbed(questions, difficulty, startIndex = 0, itemsPerPage = 5) {
+    const filteredQuestions = questions.filter(q => q.Difficulty === difficulty);
+    const questions_list = filteredQuestions.slice(startIndex, startIndex + itemsPerPage);
+    
+    const embed = new EmbedBuilder()
+        .setColor('#f39c12')
+        .setTitle(`📝 ${difficulty} Difficulty Questions`)
+        .setDescription(`Showing ${difficulty} level programming questions`)
+        .setFooter({ text: `Showing ${startIndex + 1}-${Math.min(startIndex + itemsPerPage, filteredQuestions.length)} of ${filteredQuestions.length} questions` });
+    
+    if (questions_list.length === 0) {
+        embed.setDescription(`No ${difficulty} questions found.`);
+        return embed;
+    }
+    
+    questions_list.forEach(q => {
+        const value = `**Input:** ${q.Input}\n**Output:** ${q.Output}`;
+        embed.addFields({ name: `Day ${q.Day}: ${q.Question}`, value: value, inline: false });
+    });
+    
+    return embed;
+}
+
+function getDifficultyQuestionsNavigationButtons(difficulty, currentPage, totalPages) {
+    const buttons = new ActionRowBuilder();
+    
+    if (currentPage > 1) {
+        buttons.addComponents(
+            new ButtonBuilder()
+                .setCustomId(`qd_back_${difficulty}_${currentPage - 1}`)
+                .setLabel('⬅️ Previous')
+                .setStyle(ButtonStyle.Primary)
+        );
+    }
+    
+    buttons.addComponents(
+        new ButtonBuilder()
+            .setCustomId('qd_page')
+            .setLabel(`Page ${currentPage}/${totalPages}`)
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(true)
+    );
+    
+    if (currentPage < totalPages) {
+        buttons.addComponents(
+            new ButtonBuilder()
+                .setCustomId(`qd_next_${difficulty}_${currentPage + 1}`)
+                .setLabel('Next ➡️')
+                .setStyle(ButtonStyle.Primary)
+        );
+    }
+    
+    return buttons;
 }
 
 function buildCommands() {
@@ -205,6 +265,18 @@ function buildCommands() {
                     .setRequired(true)
                     .setMinValue(1)
                     .setMaxValue(129)
+            ),
+        new SlashCommandBuilder()
+            .setName('qd')
+            .setDescription('Get questions filtered by difficulty level.')
+            .addStringOption(option =>
+                option.setName('difficulty')
+                    .setDescription('Choose difficulty: Easy or Medium')
+                    .setRequired(true)
+                    .addChoices(
+                        { name: 'Easy', value: 'Easy' },
+                        { name: 'Medium', value: 'Medium' }
+                    )
             )
     ].map(cmd => cmd.toJSON());
 }
@@ -281,6 +353,28 @@ function handleSlashCommands(client) {
                 const startIndex = (newPage - 1) * 5;
                 const embed = buildQuestionsEmbed(questions, startIndex);
                 const buttons = getQuestionsNavigationButtons(newPage, totalPages);
+
+                return interaction.update({ embeds: [embed], components: [buttons] });
+            }
+            
+            // Handle difficulty filter questions pagination buttons
+            if (interaction.customId.startsWith('qd_')) {
+                const parts = interaction.customId.split('_');
+                const direction = parts[1];
+                const difficulty = parts[2];
+                const page = parseInt(parts[3]);
+                
+                const questions = loadQuestions();
+                const filteredQuestions = questions.filter(q => q.Difficulty === difficulty);
+                const totalPages = Math.ceil(filteredQuestions.length / 5);
+                
+                let newPage = page;
+                if (direction === 'next') newPage = Math.min(newPage + 1, totalPages);
+                if (direction === 'back') newPage = Math.max(newPage - 1, 1);
+
+                const startIndex = (newPage - 1) * 5;
+                const embed = buildDifficultyQuestionsEmbed(questions, difficulty, startIndex);
+                const buttons = getDifficultyQuestionsNavigationButtons(difficulty, newPage, totalPages);
 
                 return interaction.update({ embeds: [embed], components: [buttons] });
             }
@@ -371,6 +465,25 @@ function handleSlashCommands(client) {
             
             const embed = buildQuestionDetailEmbed(question);
             return interaction.reply({ embeds: [embed] });
+        }
+
+        if (commandName === 'qd') {
+            const difficulty = interaction.options.getString('difficulty');
+            const questions = loadQuestions();
+            const filteredQuestions = questions.filter(q => q.Difficulty === difficulty);
+            
+            if (filteredQuestions.length === 0) {
+                return interaction.reply({
+                    content: `❌ No ${difficulty} difficulty questions found.`,
+                    ephemeral: true
+                });
+            }
+            
+            const totalPages = Math.ceil(filteredQuestions.length / 5);
+            const embed = buildDifficultyQuestionsEmbed(questions, difficulty, 0);
+            const buttons = getDifficultyQuestionsNavigationButtons(difficulty, 1, totalPages);
+
+            return interaction.reply({ embeds: [embed], components: [buttons] });
         }
     });
 }
