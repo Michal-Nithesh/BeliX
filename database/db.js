@@ -133,8 +133,13 @@ async function getAllMembers() {
             .select('*')
             .order('username', { ascending: true });
 
-        if (error) console.error('Error fetching members:', error);
-        return data || [];
+        if (error) {
+            console.error('Error fetching members:', error);
+            return [];
+        }
+
+        // Filter out excluded members
+        return (data || []).filter(member => !EXCLUDED_MEMBERS.includes(member.display_name) && !EXCLUDED_MEMBERS.includes(member.username));
     } catch (error) {
         console.error('Error getting all members:', error);
         return [];
@@ -274,17 +279,50 @@ async function setPoints(memberId, points) {
 
 // ============ Leaderboard ============
 
+// Members to exclude from leaderboard and member lists
+const EXCLUDED_MEMBERS = ['Haleel Rahman', 'Jerlin Shabi'];
+
 async function getLeaderboard(limit = 100) {
     if (!dbAvailable) return [];
     try {
-        const { data, error } = await supabase
-            .from('points')
-            .select('*, members(username, display_name, role)')
-            .order('points', { ascending: false })
+        // First, get all members
+        const { data: membersData, error: membersError } = await supabase
+            .from('members')
+            .select('*')
             .limit(limit);
 
-        if (error) console.error('Error fetching leaderboard:', error);
-        return data || [];
+        if (membersError) {
+            console.error('Error fetching members:', membersError);
+            return [];
+        }
+
+        // Get all points data
+        const { data: pointsData, error: pointsError } = await supabase
+            .from('points')
+            .select('*');
+
+        if (pointsError) {
+            console.error('Error fetching points:', pointsError);
+            return [];
+        }
+
+        // Merge members with their points (default to 0 if no points)
+        // Filter out excluded members
+        const leaderboard = membersData
+            .filter(member => !EXCLUDED_MEMBERS.includes(member.display_name) && !EXCLUDED_MEMBERS.includes(member.username))
+            .map(member => {
+                const points = pointsData.find(p => p.member_id === member.member_id);
+                return {
+                    member_id: member.member_id,
+                    points: points?.points || 0,
+                    members: member
+                };
+            });
+
+        // Sort by points descending
+        leaderboard.sort((a, b) => b.points - a.points);
+
+        return leaderboard;
     } catch (error) {
         console.error('Error getting leaderboard:', error);
         return [];
@@ -303,7 +341,9 @@ async function getMembersWithBirthdayToday() {
             .rpc('get_birthdays_by_month_day', { month_day: monthDay });
 
         if (error) console.error('Error fetching birthdays:', error);
-        return data || [];
+        
+        // Filter out excluded members
+        return (data || []).filter(member => !EXCLUDED_MEMBERS.includes(member.display_name) && !EXCLUDED_MEMBERS.includes(member.username));
     } catch (error) {
         console.error('Error getting today\'s birthdays:', error);
         return [];
@@ -328,6 +368,11 @@ async function getMembersWithUpcomingBirthdays(daysAhead = 7) {
         const upcoming = [];
 
         for (const member of data) {
+            // Skip excluded members
+            if (EXCLUDED_MEMBERS.includes(member.display_name) || EXCLUDED_MEMBERS.includes(member.username)) {
+                continue;
+            }
+
             if (!member.birthday) continue;
 
             const birthDate = new Date(member.birthday);
@@ -702,6 +747,137 @@ async function getMeetings(limit = 30) {
     }
 }
 
+async function confirmGathering(memberId, username, gatheringDate) {
+    if (!dbAvailable) return null;
+    try {
+        const dateStr = gatheringDate ? new Date(gatheringDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+        
+        // Check if gathering confirmation already exists for today
+        const { data: existing } = await supabase
+            .from('gathering_confirmations')
+            .select('*')
+            .eq('gathering_date', dateStr)
+            .single();
+
+        if (existing) {
+            // Update existing confirmation
+            const { data, error } = await supabase
+                .from('gathering_confirmations')
+                .update({
+                    is_confirmed: true,
+                    confirmed_by_id: memberId,
+                    confirmed_by_username: username,
+                    confirmed_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                })
+                .eq('gathering_date', dateStr)
+                .select();
+
+            if (error) {
+                console.error('Error confirming gathering:', error);
+                return null;
+            }
+            return data?.[0] || null;
+        } else {
+            // Create new confirmation
+            const { data, error } = await supabase
+                .from('gathering_confirmations')
+                .insert({
+                    gathering_date: dateStr,
+                    is_confirmed: true,
+                    confirmed_by_id: memberId,
+                    confirmed_by_username: username,
+                    confirmed_at: new Date().toISOString(),
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                })
+                .select();
+
+            if (error) {
+                console.error('Error creating gathering confirmation:', error);
+                return null;
+            }
+            return data?.[0] || null;
+        }
+    } catch (error) {
+        console.error('Error confirming gathering:', error);
+        return null;
+    }
+}
+
+async function cancelGathering(gatheringDate) {
+    if (!dbAvailable) return null;
+    try {
+        const dateStr = gatheringDate ? new Date(gatheringDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+        
+        const { data, error } = await supabase
+            .from('gathering_confirmations')
+            .update({
+                is_confirmed: false,
+                confirmed_by_id: null,
+                confirmed_by_username: null,
+                confirmed_at: null,
+                updated_at: new Date().toISOString(),
+            })
+            .eq('gathering_date', dateStr)
+            .select();
+
+        if (error) {
+            console.error('Error cancelling gathering:', error);
+            return null;
+        }
+        return data?.[0] || null;
+    } catch (error) {
+        console.error('Error cancelling gathering:', error);
+        return null;
+    }
+}
+
+async function getGatheringStatus(gatheringDate) {
+    if (!dbAvailable) return null;
+    try {
+        const dateStr = gatheringDate ? new Date(gatheringDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+        
+        const { data, error } = await supabase
+            .from('gathering_confirmations')
+            .select('*')
+            .eq('gathering_date', dateStr)
+            .single();
+
+        if (error && error.code !== 'PGRST116') {
+            console.error('Error fetching gathering status:', error);
+        }
+        return data || null;
+    } catch (error) {
+        console.error('Error getting gathering status:', error);
+        return null;
+    }
+}
+
+async function getGatheringHistory(days = 30) {
+    if (!dbAvailable) return [];
+    try {
+        const fromDate = new Date();
+        fromDate.setDate(fromDate.getDate() - days);
+        const dateStr = fromDate.toISOString().split('T')[0];
+
+        const { data, error } = await supabase
+            .from('gathering_confirmations')
+            .select('*')
+            .gte('gathering_date', dateStr)
+            .order('gathering_date', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching gathering history:', error);
+            return [];
+        }
+        return data || [];
+    } catch (error) {
+        console.error('Error getting gathering history:', error);
+        return [];
+    }
+}
+
 async function getMeetingStats() {
     if (!dbAvailable) return null;
     try {
@@ -749,4 +925,9 @@ module.exports = {
     getMeetingAttendance,
     getMeetings,
     getMeetingStats,
+    // Gathering Confirmation functions
+    confirmGathering,
+    cancelGathering,
+    getGatheringStatus,
+    getGatheringHistory,
 };

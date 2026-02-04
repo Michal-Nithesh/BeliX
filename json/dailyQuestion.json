@@ -4,14 +4,16 @@
     "Question": "Check whether a number is Even or Odd",
     "Input": "Number: 14",
     "Output": "Even",
-    "Explain": "An even number is divisible by 2 without leaving a remainder."
+    "Explain": "An even number is divisible by 2 without leaving a remainder.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 2,
     "Question": "Print greeting message using name",
     "Input": "Name: Michal",
     "Output": "Hello Michal",
-    "Explain": "The program takes a name as input and prints a greeting message."
+    "Explain": "The program takes a name as input and prints a greeting message.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 3,
@@ -19,21 +21,24 @@
     "Input": "Principal: 5000, Time: 2, Rate: 5",
     "Output": 500,
     "Explain": "Simple Interest is calculated using principal, time, and rate of interest.",
-    "Formula": "Principal * Time * Rate / 100"
+    "Formula": "Principal * Time * Rate / 100",
+    "Difficulty": "Easy"
   },
   {
     "Day": 4,
     "Question": "Perform arithmetic operation using operator",
     "Input": "Number1: 20, Number2: 5, Operator: +",
     "Output": 25,
-    "Explain": "The program performs calculation based on the given operator."
+    "Explain": "The program performs calculation based on the given operator.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 5,
     "Question": "Find the largest of two numbers",
     "Input": "Number1: 45, Number2: 78",
     "Output": 78,
-    "Explain": "The program compares two numbers and prints the larger one."
+    "Explain": "The program compares two numbers and prints the larger one.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 6,
@@ -41,35 +46,40 @@
     "Input": "Rupees: 8300",
     "Output": 100,
     "Explain": "The program converts rupees into dollars using a fixed conversion rate.",
-    "Formula": "Rupees / 83"
+    "Formula": "Rupees / 83",
+    "Difficulty": "Easy"
   },
   {
     "Day": 7,
     "Question": "Generate Fibonacci series up to n numbers",
     "Input": "n: 6",
     "Output": "0, 1, 1, 2, 3, 5",
-    "Explain": "Each number is the sum of the previous two numbers in Fibonacci series."
+    "Explain": "Each number is the sum of the previous two numbers in Fibonacci series.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 8,
     "Question": "Check whether a string is Palindrome",
     "Input": "String: madam",
     "Output": "Palindrome",
-    "Explain": "A palindrome string reads the same forwards and backwards."
+    "Explain": "A palindrome string reads the same forwards and backwards.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 9,
     "Question": "Find Armstrong numbers between two numbers",
     "Input": "Start: 100, End: 500",
     "Output": "153, 370, 371, 407",
-    "Explain": "An Armstrong number is equal to the sum of its digits raised to the power of number of digits."
+    "Explain": "An Armstrong number is equal to the sum of its digits raised to the power of number of digits.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 10,
     "Question": "Check whether a number is Positive, Negative or Zero",
     "Input": "Number: -15",
     "Output": "Negative",
-    "Explain": "The program checks the sign of the given number."
+    "Explain": "The program checks the sign of the given number.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 11,
@@ -77,63 +87,72 @@
     "Input": "Number: 5",
     "Output": 120,
     "Explain": "Factorial is the product of all positive integers up to the given number.",
-    "Formula": "n × (n-1) × ... × 1"
+    "Formula": "n \u00d7 (n-1) \u00d7 ... \u00d7 1",
+    "Difficulty": "Easy"
   },
   {
     "Day": 12,
     "Question": "Check whether a number is Prime",
     "Input": "Number: 29",
     "Output": "Prime",
-    "Explain": "A prime number has exactly two distinct factors."
+    "Explain": "A prime number has exactly two distinct factors.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 13,
     "Question": "Find sum of digits of a number",
     "Input": "Number: 1234",
     "Output": 10,
-    "Explain": "The program adds each digit of the given number."
+    "Explain": "The program adds each digit of the given number.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 14,
     "Question": "Reverse a number",
     "Input": "Number: 9876",
     "Output": 6789,
-    "Explain": "The program reverses the digits of the number."
+    "Explain": "The program reverses the digits of the number.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 15,
     "Question": "Swap two numbers",
     "Input": "A: 10, B: 20",
     "Output": "A = 20, B = 10",
-    "Explain": "The program swaps the values of two variables."
+    "Explain": "The program swaps the values of two variables.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 16,
     "Question": "Count digits in a number",
     "Input": "Number: 45678",
     "Output": 5,
-    "Explain": "The program counts how many digits are present in the number."
+    "Explain": "The program counts how many digits are present in the number.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 17,
     "Question": "Check whether a year is Leap Year",
     "Input": "Year: 2024",
     "Output": "Leap Year",
-    "Explain": "A leap year has 366 days and occurs every 4 years."
+    "Explain": "A leap year has 366 days and occurs every 4 years.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 18,
     "Question": "Find greatest of three numbers",
     "Input": "A: 12, B: 45, C: 33",
     "Output": 45,
-    "Explain": "The program compares three numbers and finds the greatest."
+    "Explain": "The program compares three numbers and finds the greatest.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 19,
     "Question": "Print multiplication table",
     "Input": "Number: 7",
     "Output": "7 x 1 = 7 ... 7 x 10 = 70",
-    "Explain": "The program prints multiplication table for the given number."
+    "Explain": "The program prints multiplication table for the given number.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 20,
@@ -141,14 +160,16 @@
     "Input": "n: 50",
     "Output": 1275,
     "Explain": "The program calculates sum of first n natural numbers.",
-    "Formula": "n × (n + 1) / 2"
+    "Formula": "n \u00d7 (n + 1) / 2",
+    "Difficulty": "Easy"
   },
   {
     "Day": 21,
     "Question": "Check whether a character is Vowel or Consonant",
     "Input": "Character: a",
     "Output": "Vowel",
-    "Explain": "The program checks whether the character is a vowel."
+    "Explain": "The program checks whether the character is a vowel.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 22,
@@ -156,7 +177,8 @@
     "Input": "Celsius: 37",
     "Output": 98.6,
     "Explain": "The program converts temperature from Celsius to Fahrenheit.",
-    "Formula": "(C × 9/5) + 32"
+    "Formula": "(C \u00d7 9/5) + 32",
+    "Difficulty": "Easy"
   },
   {
     "Day": 23,
@@ -164,42 +186,48 @@
     "Input": "Base: 2, Exponent: 5",
     "Output": 32,
     "Explain": "The program calculates power of a number.",
-    "Formula": "Base ^ Exponent"
+    "Formula": "Base ^ Exponent",
+    "Difficulty": "Easy"
   },
   {
     "Day": 24,
     "Question": "Count vowels in a string",
     "Input": "String: programming",
     "Output": 3,
-    "Explain": "The program counts vowels present in the string."
+    "Explain": "The program counts vowels present in the string.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 25,
     "Question": "Remove whitespaces from a string",
     "Input": "String: Hello World Program",
     "Output": "HelloWorldProgram",
-    "Explain": "The program removes all spaces from the string."
+    "Explain": "The program removes all spaces from the string.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 26,
     "Question": "Find ASCII value of a character",
     "Input": "Character: A",
     "Output": 65,
-    "Explain": "ASCII value represents numerical value of a character."
+    "Explain": "ASCII value represents numerical value of a character.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 27,
     "Question": "Check whether a number is Perfect",
     "Input": "Number: 28",
     "Output": "Perfect Number",
-    "Explain": "A perfect number is equal to the sum of its proper divisors."
+    "Explain": "A perfect number is equal to the sum of its proper divisors.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 28,
     "Question": "Find GCD of two numbers",
     "Input": "Number1: 48, Number2: 18",
     "Output": 6,
-    "Explain": "GCD is the greatest number that divides both numbers."
+    "Explain": "GCD is the greatest number that divides both numbers.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 29,
@@ -207,14 +235,16 @@
     "Input": "Number1: 15, Number2: 20",
     "Output": 60,
     "Explain": "LCM is the smallest number divisible by both numbers.",
-    "Formula": "(a × b) / GCD"
+    "Formula": "(a \u00d7 b) / GCD",
+    "Difficulty": "Easy"
   },
   {
     "Day": 30,
     "Question": "Count even and odd numbers in a list",
     "Input": "Numbers: 12, 7, 9, 20, 33, 40",
     "Output": "Even: 3, Odd: 3",
-    "Explain": "The program counts even and odd numbers in the list."
+    "Explain": "The program counts even and odd numbers in the list.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 31,
@@ -222,7 +252,8 @@
     "Input": "Radius: 7",
     "Output": 153.94,
     "Explain": "The program calculates the area of a circle using its radius.",
-    "Formula": "π × r × r"
+    "Formula": "\u03c0 \u00d7 r \u00d7 r",
+    "Difficulty": "Easy"
   },
   {
     "Day": 32,
@@ -230,7 +261,8 @@
     "Input": "Base: 10, Height: 5",
     "Output": 25,
     "Explain": "The area of a triangle is calculated using base and height.",
-    "Formula": "½ × base × height"
+    "Formula": "\u00bd \u00d7 base \u00d7 height",
+    "Difficulty": "Easy"
   },
   {
     "Day": 33,
@@ -238,14 +270,16 @@
     "Input": "Length: 8, Breadth: 6",
     "Output": 48,
     "Explain": "The area of a rectangle is calculated by multiplying length and breadth.",
-    "Formula": "length × breadth"
+    "Formula": "length \u00d7 breadth",
+    "Difficulty": "Easy"
   },
   {
     "Day": 34,
     "Question": "Area Of Isosceles Triangle",
     "Input": "Equal Side: 5, Base: 6",
     "Output": 12,
-    "Explain": "The area is calculated using base and height derived from equal sides."
+    "Explain": "The area is calculated using base and height derived from equal sides.",
+    "Difficulty": "Easy"
   },
   {
     "Day": 35,
@@ -253,7 +287,8 @@
     "Input": "Base: 12, Height: 5",
     "Output": 60,
     "Explain": "The area of a parallelogram depends on its base and height.",
-    "Formula": "base × height"
+    "Formula": "base \u00d7 height",
+    "Difficulty": "Easy"
   },
   {
     "Day": 36,
@@ -261,7 +296,8 @@
     "Input": "Diagonal1: 10, Diagonal2: 8",
     "Output": 40,
     "Explain": "The area of a rhombus is calculated using its diagonals.",
-    "Formula": "½ × d1 × d2"
+    "Formula": "\u00bd \u00d7 d1 \u00d7 d2",
+    "Difficulty": "Easy"
   },
   {
     "Day": 37,
@@ -269,7 +305,8 @@
     "Input": "Side: 6",
     "Output": 15.59,
     "Explain": "The area of an equilateral triangle depends on the length of its side.",
-    "Formula": "(√3 / 4) × side²"
+    "Formula": "(\u221a3 / 4) \u00d7 side\u00b2",
+    "Difficulty": "Easy"
   },
   {
     "Day": 38,
@@ -277,7 +314,8 @@
     "Input": "Radius: 7",
     "Output": 43.98,
     "Explain": "The perimeter of a circle is also called circumference.",
-    "Formula": "2 × π × r"
+    "Formula": "2 \u00d7 \u03c0 \u00d7 r",
+    "Difficulty": "Easy"
   },
   {
     "Day": 39,
@@ -285,7 +323,8 @@
     "Input": "Side: 6",
     "Output": 18,
     "Explain": "All sides of an equilateral triangle are equal.",
-    "Formula": "3 × side"
+    "Formula": "3 \u00d7 side",
+    "Difficulty": "Easy"
   },
   {
     "Day": 40,
@@ -293,7 +332,8 @@
     "Input": "Base: 10, Side: 6",
     "Output": 32,
     "Explain": "Opposite sides of a parallelogram are equal.",
-    "Formula": "2 × (base + side)"
+    "Formula": "2 \u00d7 (base + side)",
+    "Difficulty": "Easy"
   },
   {
     "Day": 41,
@@ -301,7 +341,8 @@
     "Input": "Length: 8, Breadth: 6",
     "Output": 28,
     "Explain": "The perimeter of a rectangle is the sum of all its sides.",
-    "Formula": "2 × (length + breadth)"
+    "Formula": "2 \u00d7 (length + breadth)",
+    "Difficulty": "Easy"
   },
   {
     "Day": 42,
@@ -309,7 +350,8 @@
     "Input": "Side: 5",
     "Output": 20,
     "Explain": "All sides of a square are equal.",
-    "Formula": "4 × side"
+    "Formula": "4 \u00d7 side",
+    "Difficulty": "Easy"
   },
   {
     "Day": 43,
@@ -317,7 +359,8 @@
     "Input": "Side: 6",
     "Output": 24,
     "Explain": "All sides of a rhombus are equal.",
-    "Formula": "4 × side"
+    "Formula": "4 \u00d7 side",
+    "Difficulty": "Easy"
   },
   {
     "Day": 44,
@@ -325,7 +368,8 @@
     "Input": "Radius: 3, Height: 7",
     "Output": 65.97,
     "Explain": "The volume of a cone depends on its radius and height.",
-    "Formula": "(1/3) × π × r² × h"
+    "Formula": "(1/3) \u00d7 \u03c0 \u00d7 r\u00b2 \u00d7 h",
+    "Difficulty": "Easy"
   },
   {
     "Day": 45,
@@ -333,7 +377,8 @@
     "Input": "Base Area: 20, Height: 10",
     "Output": 200,
     "Explain": "Volume of a prism is calculated by multiplying base area and height.",
-    "Formula": "base area × height"
+    "Formula": "base area \u00d7 height",
+    "Difficulty": "Easy"
   },
   {
     "Day": 46,
@@ -341,7 +386,8 @@
     "Input": "Radius: 4, Height: 10",
     "Output": 502.4,
     "Explain": "The volume of a cylinder depends on radius and height.",
-    "Formula": "π × r² × h"
+    "Formula": "\u03c0 \u00d7 r\u00b2 \u00d7 h",
+    "Difficulty": "Easy"
   },
   {
     "Day": 47,
@@ -349,7 +395,8 @@
     "Input": "Radius: 7",
     "Output": 1436.76,
     "Explain": "The volume of a sphere depends only on its radius.",
-    "Formula": "(4/3) × π × r³"
+    "Formula": "(4/3) \u00d7 \u03c0 \u00d7 r\u00b3",
+    "Difficulty": "Easy"
   },
   {
     "Day": 48,
@@ -357,7 +404,8 @@
     "Input": "Base Area: 30, Height: 9",
     "Output": 90,
     "Explain": "The volume of a pyramid is one-third of base area multiplied by height.",
-    "Formula": "(1/3) × base area × height"
+    "Formula": "(1/3) \u00d7 base area \u00d7 height",
+    "Difficulty": "Easy"
   },
   {
     "Day": 49,
@@ -365,7 +413,8 @@
     "Input": "Radius: 5, Height: 10",
     "Output": 314,
     "Explain": "Curved surface area excludes top and bottom surfaces.",
-    "Formula": "2 × π × r × h"
+    "Formula": "2 \u00d7 \u03c0 \u00d7 r \u00d7 h",
+    "Difficulty": "Easy"
   },
   {
     "Day": 50,
@@ -373,85 +422,97 @@
     "Input": "Side: 4",
     "Output": 96,
     "Explain": "A cube has six equal square faces.",
-    "Formula": "6 × side²"
+    "Formula": "6 \u00d7 side\u00b2",
+    "Difficulty": "Easy"
   },
   {
     "Day": 51,
     "Question": "Fibonacci Series",
     "Input": "n: 7",
     "Output": "0, 1, 1, 2, 3, 5, 8",
-    "Explain": "Each number is the sum of the previous two numbers."
+    "Explain": "Each number is the sum of the previous two numbers.",
+    "Difficulty": "Medium"
   },
   {
     "Day": 52,
     "Question": "Subtract the Product and Sum of Digits of an Integer",
     "Input": "Number: 234",
     "Output": 15,
-    "Explain": "The program subtracts the sum of digits from the product of digits."
+    "Explain": "The program subtracts the sum of digits from the product of digits.",
+    "Difficulty": "Medium"
   },
   {
     "Day": 53,
     "Question": "Print all factors of a number",
     "Input": "Number: 12",
     "Output": "1, 2, 3, 4, 6, 12",
-    "Explain": "Factors are numbers that divide the given number completely."
+    "Explain": "Factors are numbers that divide the given number completely.",
+    "Difficulty": "Medium"
   },
   {
     "Day": 54,
     "Question": "Sum numbers until user enters 0",
     "Input": "Numbers: 5, 10, 15, 0",
     "Output": 30,
-    "Explain": "The loop continues until 0 is entered and sums all values."
+    "Explain": "The loop continues until 0 is entered and sums all values.",
+    "Difficulty": "Medium"
   },
   {
     "Day": 55,
     "Question": "Find largest number until user enters 0",
     "Input": "Numbers: 8, 25, 14, 0",
     "Output": 25,
-    "Explain": "The program tracks the maximum number entered before 0."
+    "Explain": "The program tracks the maximum number entered before 0.",
+    "Difficulty": "Medium"
   },
   {
     "Day": 56,
     "Question": "Addition Of Two Numbers",
     "Input": "Number1: 15, Number2: 25",
     "Output": 40,
-    "Explain": "The program adds two numbers and prints the result."
+    "Explain": "The program adds two numbers and prints the result.",
+    "Difficulty": "Medium"
   },
   {
     "Question": "Subtraction Of Two Numbers",
     "Input": "Number1: 50, Number2: 20",
     "Output": 30,
     "Explain": "The program subtracts the second number from the first.",
-    "Day": 57
+    "Day": 57,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Multiplication Of Two Numbers",
     "Input": "Number1: 6, Number2: 7",
     "Output": 42,
     "Explain": "The program multiplies two numbers and prints the product.",
-    "Day": 58
+    "Day": 58,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Division Of Two Numbers",
     "Input": "Number1: 100, Number2: 4",
     "Output": 25,
     "Explain": "The program divides the first number by the second.",
-    "Day": 59
+    "Day": 59,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Factorial Program",
     "Input": "Number: 5",
     "Output": 120,
     "Explain": "Factorial is the product of all positive integers up to the given number.",
-    "Formula": "n × (n-1) × ... × 1",
-    "Day": 60
+    "Formula": "n \u00d7 (n-1) \u00d7 ... \u00d7 1",
+    "Day": 60,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Calculate Electricity Bill",
     "Input": "Units Consumed: 150, Cost Per Unit: 5",
     "Output": 750,
     "Explain": "Electricity bill is calculated based on total units consumed.",
-    "Day": 61
+    "Day": 61,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Calculate Average Of N Numbers",
@@ -459,31 +520,35 @@
     "Output": 25,
     "Explain": "Average is calculated by dividing the sum of numbers by total count.",
     "Formula": "Sum / Count",
-    "Day": 62
+    "Day": 62,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Calculate Discount Of Product",
     "Input": "Price: 2000, Discount Percentage: 10",
     "Output": 1800,
     "Explain": "Discounted price is calculated by reducing discount amount from original price.",
-    "Formula": "Price - (Price × Discount / 100)",
-    "Day": 63
+    "Formula": "Price - (Price \u00d7 Discount / 100)",
+    "Day": 63,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Calculate Distance Between Two Points",
     "Input": "Point1: (2,3), Point2: (6,7)",
     "Output": 5.66,
     "Explain": "Distance between two points is calculated using coordinate geometry.",
-    "Formula": "√[(x2-x1)² + (y2-y1)²]",
-    "Day": 64
+    "Formula": "\u221a[(x2-x1)\u00b2 + (y2-y1)\u00b2]",
+    "Day": 64,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Calculate Commission Percentage",
     "Input": "Sales Amount: 50000, Commission Rate: 5",
     "Output": 2500,
     "Explain": "Commission is calculated based on sales amount and rate.",
-    "Formula": "Sales × Rate / 100",
-    "Day": 65
+    "Formula": "Sales \u00d7 Rate / 100",
+    "Day": 65,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Power Of A Number",
@@ -491,58 +556,66 @@
     "Output": 81,
     "Explain": "Power is calculated by multiplying the base exponent times.",
     "Formula": "Base ^ Exponent",
-    "Day": 66
+    "Day": 66,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Calculate Depreciation of Value",
     "Input": "Initial Value: 10000, Rate: 10, Time: 2",
     "Output": 8000,
     "Explain": "Depreciation reduces the value of an asset over time.",
-    "Day": 67
+    "Day": 67,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Calculate Batting Average",
     "Input": "Total Runs: 450, Matches Played: 10",
     "Output": 45,
     "Explain": "Batting average is total runs divided by matches played.",
-    "Day": 68
+    "Day": 68,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Calculate CGPA",
     "Input": "Grades: 8.2, 7.8, 8.5, 9.0",
     "Output": 8.38,
     "Explain": "CGPA is the average of all grade points.",
-    "Day": 69
+    "Day": 69,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Compound Interest Program",
     "Input": "Principal: 5000, Rate: 10, Time: 2",
     "Output": 6050,
     "Explain": "Compound interest adds interest on both principal and accumulated interest.",
-    "Formula": "P × (1 + R/100)^T",
-    "Day": 70
+    "Formula": "P \u00d7 (1 + R/100)^T",
+    "Day": 70,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Calculate Average Marks",
     "Input": "Marks: 70, 80, 90, 60",
     "Output": 75,
     "Explain": "Average marks are calculated by dividing total marks by number of subjects.",
-    "Day": 71
+    "Day": 71,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Sum Of N Numbers",
     "Input": "n: 10",
     "Output": 55,
     "Explain": "The program calculates sum of first n natural numbers.",
-    "Formula": "n × (n + 1) / 2",
-    "Day": 72
+    "Formula": "n \u00d7 (n + 1) / 2",
+    "Day": 72,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Armstrong Number",
     "Input": "Number: 153",
     "Output": "Armstrong Number",
     "Explain": "An Armstrong number is equal to the sum of its digits raised to the power of number of digits.",
-    "Day": 73
+    "Day": 73,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Find NCR and NPR",
@@ -550,85 +623,97 @@
     "Output": "NCR = 10, NPR = 20",
     "Explain": "NCR and NPR calculate combinations and permutations.",
     "Formula": "NCR = n!/(r!(n-r)!), NPR = n!/(n-r)!",
-    "Day": 74
+    "Day": 74,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Reverse A String",
     "Input": "String: hello",
     "Output": "olleh",
     "Explain": "The program reverses the characters of a string.",
-    "Day": 75
+    "Day": 75,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Check if a number is Palindrome",
     "Input": "Number: 121",
     "Output": "Palindrome",
     "Explain": "A palindrome number reads the same forwards and backwards.",
-    "Day": 76
+    "Day": 76,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Future Investment Value",
     "Input": "Present Value: 10000, Rate: 8, Time: 2",
     "Output": 11664,
     "Explain": "Future value is calculated using compound interest formula.",
-    "Day": 77
+    "Day": 77,
+    "Difficulty": "Medium"
   },
   {
     "Question": "HCF Of Two Numbers",
     "Input": "Number1: 36, Number2: 60",
     "Output": 12,
     "Explain": "HCF is the greatest number that divides both numbers completely.",
-    "Day": 78
+    "Day": 78,
+    "Difficulty": "Medium"
   },
   {
     "Question": "LCM Of Two Numbers",
     "Input": "Number1: 12, Number2: 18",
     "Output": 36,
     "Explain": "LCM is the smallest number divisible by both numbers.",
-    "Formula": "(a × b) / HCF",
-    "Day": 79
+    "Formula": "(a \u00d7 b) / HCF",
+    "Day": 79,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Check Vowel Or Consonant",
     "Input": "Character: e",
     "Output": "Vowel",
     "Explain": "The program checks whether a character is a vowel or consonant.",
-    "Day": 80
+    "Day": 80,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Perfect Number",
     "Input": "Number: 28",
     "Output": "Perfect Number",
     "Explain": "A perfect number is equal to the sum of its proper divisors.",
-    "Day": 81
+    "Day": 81,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Check Leap Year",
     "Input": "Year: 2024",
     "Output": "Leap Year",
     "Explain": "A leap year has 366 days and occurs every 4 years.",
-    "Day": 82
+    "Day": 82,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Sum Of Digits Of Number",
     "Input": "Number: 456",
     "Output": 15,
     "Explain": "The program adds all digits of the given number.",
-    "Day": 83
+    "Day": 83,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Count Even Days Kunal Can Go Out In August",
     "Input": "Month: August",
     "Output": 15,
     "Explain": "August has 31 days and Kunal can go out only on even days.",
-    "Day": 84
+    "Day": 84,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Sum of Negative, Positive Even and Positive Odd Numbers",
     "Input": "Numbers: -5, -3, 2, 4, 7, 0",
     "Output": "Negative Sum: -8, Positive Even Sum: 6, Positive Odd Sum: 7",
     "Explain": "The program categorizes numbers and sums them until 0 is entered.",
-    "Day": 85
+    "Day": 85,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Find Maximum and Minimum among three numbers using methods",
@@ -637,7 +722,8 @@
     "Input": "A: 12, B: 45, C: 7",
     "Output": "Maximum: 45, Minimum: 7",
     "Explain": "A separate method compares three numbers to find the maximum and minimum. The method is called from main using hardcoded values.",
-    "Day": 86
+    "Day": 86,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Check whether a number is Even or Odd",
@@ -646,7 +732,8 @@
     "Input": "Number: 27",
     "Output": "Odd",
     "Explain": "The method checks if the number is divisible by 2. The function is called inside main.",
-    "Day": 87
+    "Day": 87,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Check Voting Eligibility",
@@ -655,7 +742,8 @@
     "Input": "Age: 20",
     "Output": "Eligible to Vote",
     "Explain": "A method checks if age is greater than or equal to 18. The method is invoked from main.",
-    "Day": 88
+    "Day": 88,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Sum of two numbers using method",
@@ -664,7 +752,8 @@
     "Input": "Number1: 15, Number2: 25",
     "Output": 40,
     "Explain": "A user-defined method adds two numbers and returns the result.",
-    "Day": 89
+    "Day": 89,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Product of two numbers using method",
@@ -673,7 +762,8 @@
     "Input": "Number1: 6, Number2: 7",
     "Output": 42,
     "Explain": "The method multiplies two numbers and returns the product.",
-    "Day": 90
+    "Day": 90,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Circumference and Area of a Circle using methods",
@@ -682,8 +772,9 @@
     "Input": "Radius: 7",
     "Output": "Circumference: 43.98, Area: 153.94",
     "Explain": "Two separate calculations are done inside a method to find circumference and area of a circle.",
-    "Formula": "Circumference = 2 × π × r, Area = π × r²",
-    "Day": 91
+    "Formula": "Circumference = 2 \u00d7 \u03c0 \u00d7 r, Area = \u03c0 \u00d7 r\u00b2",
+    "Day": 91,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Check whether a number is Prime",
@@ -692,7 +783,8 @@
     "Input": "Number: 29",
     "Output": "Prime",
     "Explain": "The method checks divisibility of the number to determine if it is prime.",
-    "Day": 92
+    "Day": 92,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Display Grade based on Marks",
@@ -701,7 +793,8 @@
     "Input": "Marks: 85",
     "Output": "Grade: AB",
     "Explain": "The method uses conditional statements to assign grades based on marks.",
-    "Day": 93
+    "Day": 93,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Find Factorial using method",
@@ -710,8 +803,9 @@
     "Input": "Number: 4",
     "Output": 24,
     "Explain": "The factorial method multiplies numbers from 1 to n.",
-    "Formula": "n! = 1 × 2 × 3 × ... × n",
-    "Day": 94
+    "Formula": "n! = 1 \u00d7 2 \u00d7 3 \u00d7 ... \u00d7 n",
+    "Day": 94,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Check if a number is Palindrome using function",
@@ -720,7 +814,8 @@
     "Input": "Number: 121",
     "Output": "Palindrome",
     "Explain": "The method reverses the number and compares it with the original value.",
-    "Day": 95
+    "Day": 95,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Convert previous programs into functions",
@@ -729,7 +824,8 @@
     "Input": "Example Input: 10",
     "Output": "Function Executed Successfully",
     "Explain": "Previously written logic is modularized into functions and called from main.",
-    "Day": 96
+    "Day": 96,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Check Pythagorean Triplet",
@@ -738,8 +834,9 @@
     "Input": "A: 3, B: 4, C: 5",
     "Output": "Pythagorean Triplet",
     "Explain": "The method checks if the sum of squares of two numbers equals the square of the third.",
-    "Formula": "a² + b² = c²",
-    "Day": 97
+    "Formula": "a\u00b2 + b\u00b2 = c\u00b2",
+    "Day": 97,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Find all Prime Numbers between two numbers",
@@ -748,7 +845,8 @@
     "Input": "Start: 10, End: 30",
     "Output": "11, 13, 17, 19, 23, 29",
     "Explain": "The method checks each number in the given range and prints prime numbers.",
-    "Day": 98
+    "Day": 98,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Sum of first n Natural Numbers using function",
@@ -757,217 +855,248 @@
     "Input": "n: 10",
     "Output": 55,
     "Explain": "The method calculates the sum of first n natural numbers.",
-    "Formula": "n × (n + 1) / 2",
-    "Day": 99
+    "Formula": "n \u00d7 (n + 1) / 2",
+    "Day": 99,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Right Angled Triangle Pattern",
     "Input": "Rows: 5",
     "Output": "*\n**\n***\n****\n*****",
     "Explain": "Stars are printed in increasing order forming a right-angled triangle.",
-    "Day": 100
+    "Day": 100,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Inverted Right Angled Triangle Pattern",
     "Input": "Rows: 5",
     "Output": "*****\n****\n***\n**\n*",
     "Explain": "Stars are printed in decreasing order.",
-    "Day": 101
+    "Day": 101,
+    "Difficulty": "Easy"
   },
   {
     "Question": "Print Square Star Pattern",
     "Input": "Size: 4",
     "Output": "****\n****\n****\n****",
     "Explain": "All rows contain the same number of stars.",
-    "Day": 102
+    "Day": 102,
+    "Difficulty": "Easy"
   },
   {
     "Question": "Print Pyramid Star Pattern",
     "Input": "Rows: 4",
     "Output": "   *\n  ***\n *****\n*******",
     "Explain": "Stars are centered to form a pyramid.",
-    "Day": 103
+    "Day": 103,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Inverted Pyramid Pattern",
     "Input": "Rows: 4",
     "Output": "*******\n *****\n  ***\n   *",
     "Explain": "An inverted version of the pyramid pattern.",
-    "Day": 104
+    "Day": 104,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Left Aligned Triangle Pattern",
     "Input": "Rows: 5",
     "Output": "*\n**\n***\n****\n*****",
     "Explain": "Stars increase from left to right.",
-    "Day": 105
+    "Day": 105,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Right Aligned Triangle Pattern",
     "Input": "Rows: 5",
     "Output": "    *\n   **\n  ***\n ****\n*****",
     "Explain": "Spaces are added before stars to align right.",
-    "Day": 106
+    "Day": 106,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Number Triangle Pattern",
     "Input": "Rows: 4",
     "Output": "1\n12\n123\n1234",
     "Explain": "Numbers increase sequentially in each row.",
-    "Day": 107
+    "Day": 107,
+    "Difficulty": "Easy"
   },
   {
     "Question": "Print Repeating Number Pattern",
     "Input": "Rows: 4",
     "Output": "1\n22\n333\n4444",
     "Explain": "Each row prints the same number repeatedly.",
-    "Day": 108
+    "Day": 108,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Inverted Number Pattern",
     "Input": "Rows: 4",
     "Output": "1234\n123\n12\n1",
     "Explain": "Numbers decrease row by row.",
-    "Day": 109
+    "Day": 109,
+    "Difficulty": "Easy"
   },
   {
     "Question": "Print Floyd's Triangle",
     "Input": "Rows: 4",
     "Output": "1\n2 3\n4 5 6\n7 8 9 10",
     "Explain": "Numbers are printed continuously in triangle form.",
-    "Day": 110
+    "Day": 110,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Binary Triangle Pattern",
     "Input": "Rows: 4",
     "Output": "1\n01\n101\n0101",
     "Explain": "Binary numbers alternate in each row.",
-    "Day": 111
+    "Day": 111,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Hollow Square Pattern",
     "Input": "Size: 5",
     "Output": "*****\n*   *\n*   *\n*   *\n*****",
     "Explain": "Stars are printed only on the boundary.",
-    "Day": 112
+    "Day": 112,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Hollow Pyramid Pattern",
     "Input": "Rows: 4",
     "Output": "   *\n  * *\n *   *\n*******",
     "Explain": "Only the borders of the pyramid are printed.",
-    "Day": 113
+    "Day": 113,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Diamond Star Pattern",
     "Input": "Rows: 3",
     "Output": "  *\n ***\n*****\n ***\n  *",
     "Explain": "Stars form a diamond shape.",
-    "Day": 114
+    "Day": 114,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Hourglass Pattern",
     "Input": "Rows: 3",
     "Output": "*****\n ***\n  *\n ***\n*****",
     "Explain": "Stars form an hourglass shape.",
-    "Day": 115
+    "Day": 115,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Continuous Number Square",
     "Input": "Size: 3",
     "Output": "123\n456\n789",
     "Explain": "Numbers are printed continuously in square form.",
-    "Day": 116
+    "Day": 116,
+    "Difficulty": "Easy"
   },
   {
     "Question": "Print Alphabet Triangle Pattern",
     "Input": "Rows: 4",
     "Output": "A\nAB\nABC\nABCD",
     "Explain": "Alphabets increase sequentially.",
-    "Day": 117
+    "Day": 117,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Repeating Alphabet Pattern",
     "Input": "Rows: 4",
     "Output": "A\nBB\nCCC\nDDDD",
     "Explain": "Each row repeats the same alphabet.",
-    "Day": 118
+    "Day": 118,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Inverted Star Pyramid",
     "Input": "Rows: 4",
     "Output": "*******\n *****\n  ***\n   *",
     "Explain": "Stars reduce from top to bottom.",
-    "Day": 119
+    "Day": 119,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Zigzag Star Pattern",
     "Input": "Rows: 3",
     "Output": "*   *   *\n * * * *\n  *   *",
     "Explain": "Stars are printed in zigzag form.",
-    "Day": 120
+    "Day": 120,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Cross Star Pattern",
     "Input": "Size: 5",
     "Output": "*   *\n * *\n  *\n * *\n*   *",
     "Explain": "Stars form a cross shape.",
-    "Day": 121
+    "Day": 121,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Hollow Diamond Pattern",
     "Input": "Rows: 3",
     "Output": "  *\n * *\n*   *\n * *\n  *",
     "Explain": "Only border stars form a diamond.",
-    "Day": 122
+    "Day": 122,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Number Pyramid Pattern",
     "Input": "Rows: 4",
     "Output": "   1\n  121\n 12321\n1234321",
     "Explain": "Numbers increase and decrease symmetrically.",
-    "Day": 123
+    "Day": 123,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Continuous Alphabet Square",
     "Input": "Size: 3",
     "Output": "ABC\nDEF\nGHI",
     "Explain": "Alphabets are printed continuously.",
-    "Day": 124
+    "Day": 124,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Star Plus Pattern",
     "Input": "Size: 5",
     "Output": "  *\n  *\n*****\n  *\n  *",
     "Explain": "Stars form a plus shape.",
-    "Day": 125
+    "Day": 125,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Hollow Triangle Pattern",
     "Input": "Rows: 5",
     "Output": "*\n* *\n*   *\n*     *\n*******",
     "Explain": "Only borders of the triangle are printed.",
-    "Day": 126
+    "Day": 126,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Reverse Number Triangle",
     "Input": "Rows: 4",
     "Output": "4321\n321\n21\n1",
     "Explain": "Numbers decrease in reverse order.",
-    "Day": 127
+    "Day": 127,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Alternating Star Pattern",
     "Input": "Rows: 5",
     "Output": "*\n**\n*\n**\n*",
     "Explain": "Stars alternate between one and two per row.",
-    "Day": 128
+    "Day": 128,
+    "Difficulty": "Medium"
   },
   {
     "Question": "Print Spiral Star Box",
     "Input": "Size: 5",
     "Output": "*****\n    *\n*****\n*    \n*****",
     "Explain": "Stars are printed in spiral box style.",
-    "Day": 129
+    "Day": 129,
+    "Difficulty": "Medium"
   }
 ]
