@@ -1,4 +1,7 @@
-[
+{
+  "startQuestionNumber": 109,
+  "startDate": "2026-02-05",
+  "Questions": [
   {
     "Day": 1,
     "Question": "Check whether a number is Even or Odd",
@@ -1098,5 +1101,184 @@
     "Explain": "Stars are printed in spiral box style.",
     "Day": 129,
     "Difficulty": "Medium"
+  },
+  {
+    "Question": "Build Array from Permutation (Array)",
+    "Input": "nums = [0,2,1,5,3,4]",
+    "Output": "[0,1,2,4,5,3]",
+    "Explain": "Each element is replaced by nums[nums[i]] using array indexing.",
+    "Day": 130,
+    "Difficulty": "Easy"
+  },
+  {
+    "Question": "Concatenation of Array (Array)",
+    "Input": "nums = [1,2,1]",
+    "Output": "[1,2,1,1,2,1]",
+    "Explain": "The array is concatenated with itself.",
+    "Day": 131,
+    "Difficulty": "Easy"
+  },
+  {
+    "Question": "Running Sum of 1D Array (Array)",
+    "Input": "nums = [1,2,3,4]",
+    "Output": "[1,3,6,10]",
+    "Explain": "Each element stores the cumulative sum of previous elements.",
+    "Day": 132,
+    "Difficulty": "Easy"
+  },
+  {
+    "Question": "Richest Customer Wealth (Array)",
+    "Input": "accounts = [[1,2,3],[3,2,1]]",
+    "Output": 6,
+    "Explain": "Each customer's wealth is summed and the maximum is returned.",
+    "Day": 133,
+    "Difficulty": "Easy"
+  },
+  {
+    "Question": "Shuffle the Array (Array)",
+    "Input": "nums = [2,5,1,3,4,7], n = 3",
+    "Output": "[2,3,5,4,1,7]",
+    "Explain": "Elements are rearranged by interleaving two halves of the array.",
+    "Day": 134,
+    "Difficulty": "Easy"
+  },
+  {
+    "Question": "Kids With the Greatest Number of Candies (Array)",
+    "Input": "candies = [2,3,5,1,3], extraCandies = 3",
+    "Output": "[true,true,true,false,true]",
+    "Explain": "Checks if each child can have the greatest candies after adding extra.",
+    "Day": 135,
+    "Difficulty": "Easy"
+  },
+  {
+    "Question": "Number of Good Pairs (Array)",
+    "Input": "nums = [1,2,3,1,1,3]",
+    "Output": 4,
+    "Explain": "Counts pairs where nums[i] == nums[j] and i < j.",
+    "Day": 136,
+    "Difficulty": "Easy"
+  },
+  {
+    "Question": "How Many Numbers Are Smaller Than the Current Number (Array)",
+    "Input": "nums = [8,1,2,2,3]",
+    "Output": "[4,0,1,1,3]",
+    "Explain": "Counts how many numbers are smaller than each array element.",
+    "Day": 137,
+    "Difficulty": "Easy"
+  },
+  {
+    "Question": "Create Target Array in the Given Order (Array)",
+    "Input": "nums = [0,1,2,3,4], index = [0,1,2,2,1]",
+    "Output": "[0,4,1,3,2]",
+    "Explain": "Elements are inserted at given indices using array operations.",
+    "Day": 138,
+    "Difficulty": "Easy"
+  },
+  {
+    "Question": "Check if the Sentence Is Pangram (Array)",
+    "Input": "sentence = \"thequickbrownfoxjumpsoverthelazydog\"",
+    "Output": true,
+    "Explain": "Checks if all 26 alphabets appear using array frequency tracking.",
+    "Day": 139,
+    "Difficulty": "Easy"
+  },
+  {
+    "Question": "Count Items Matching a Rule (Array)",
+    "Input": "items = [[\"phone\",\"blue\",\"pixel\"],[\"computer\",\"silver\",\"lenovo\"]], ruleKey = \"color\", ruleValue = \"silver\"",
+    "Output": 1,
+    "Explain": "Counts items where array values match the given rule.",
+    "Day": 140,
+    "Difficulty": "Easy"
+  },
+  {
+    "Question": "Find the Highest Altitude (Array)",
+    "Input": "gain = [-5,1,5,0,-7]",
+    "Output": 1,
+    "Explain": "Tracks altitude changes using cumulative array sum.",
+    "Day": 141,
+    "Difficulty": "Easy"
+  },
+  {
+    "Question": "Flipping an Image (Array)",
+    "Input": "image = [[1,1,0],[1,0,1],[0,0,0]]",
+    "Output": "[[1,0,0],[0,1,0],[1,1,1]]",
+    "Explain": "Each row is reversed and bits are flipped.",
+    "Day": 142,
+    "Difficulty": "Easy"
+  },
+  {
+    "Question": "Cells with Odd Values in a Matrix (Array)",
+    "Input": "m = 2, n = 3, indices = [[0,1],[1,1]]",
+    "Output": 6,
+    "Explain": "Rows and columns are incremented using a 2D array.",
+    "Day": 143,
+    "Difficulty": "Easy"
+  },
+  {
+    "Question": "Matrix Diagonal Sum (Array)",
+    "Input": "mat = [[1,2,3],[4,5,6],[7,8,9]]",
+    "Output": 25,
+    "Explain": "Sums both diagonals of a square matrix array.",
+    "Day": 144,
+    "Difficulty": "Easy"
+  },
+  {
+    "Question": "Find Numbers with Even Number of Digits (Array)",
+    "Input": "nums = [12,345,2,6,7896]",
+    "Output": 2,
+    "Explain": "Counts numbers having even digit length in the array.",
+    "Day": 145,
+    "Difficulty": "Easy"
+  },
+  {
+    "Question": "Transpose Matrix (Array)",
+    "Input": "matrix = [[1,2,3],[4,5,6]]",
+    "Output": "[[1,4],[2,5],[3,6]]",
+    "Explain": "Rows become columns using array transformation.",
+    "Day": 146,
+    "Difficulty": "Easy"
+  },
+  {
+    "Question": "Add to Array-Form of Integer (Array)",
+    "Input": "num = [1,2,0,0], k = 34",
+    "Output": "[1,2,3,4]",
+    "Explain": "Adds integer to array-form number.",
+    "Day": 147,
+    "Difficulty": "Easy"
+  },
+  {
+    "Question": "Two Sum (Array)",
+    "Input": "nums = [2,7,11,15], target = 9",
+    "Output": "[0,1]",
+    "Explain": "Finds two array indices whose sum equals target.",
+    "Day": 148,
+    "Difficulty": "Easy"
+  },
+  {
+    "Question": "Plus One (Array)",
+    "Input": "digits = [1,2,3]",
+    "Output": "[1,2,4]",
+    "Explain": "Adds one to the number represented by array digits.",
+    "Day": 149,
+    "Difficulty": "Easy"
+  },
+  {
+    "Question": "Remove Duplicates from Sorted Array (Array)",
+    "Input": "nums = [1,1,2]",
+    "Output": "Length = 2, nums = [1,2]",
+    "Explain": "Duplicates are removed in-place from sorted array.",
+    "Day": 150,
+    "Difficulty": "Easy"
+  },
+  {
+    "Question": "Minimum Cost to Move Chips to the Same Position (Array)",
+    "Input": "position = [1,2,3]",
+    "Output": 1,
+    "Explain": "Counts odd and even positions to minimize cost.",
+    "Day": 151,
+    "Difficulty": "Easy"
   }
-]
+],
+  "currentIndex": 0,
+  "lastPostedDate": "2026-02-05T09:05:01.416Z"
+}

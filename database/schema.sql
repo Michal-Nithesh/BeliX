@@ -46,6 +46,7 @@ create table public.members (
   roll_number text null,
   batch text null,
   date_of_birth date null,
+  problem_solved integer null default 0,
   constraint members_pkey primary key (member_id)
 ) TABLESPACE pg_default;
 

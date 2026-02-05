@@ -152,25 +152,35 @@ async function initializePoints(memberId) {
     if (!dbAvailable) return;
     try {
         const id = parseInt(memberId, 10);
-        const { data: existing } = await supabase
-            .from('points')
-            .select('*')
+        const timestamp = new Date().toISOString();
+        
+        // Check if member exists and has belmonts_points
+        const { data: member } = await supabase
+            .from('members')
+            .select('belmonts_points')
             .eq('member_id', id)
             .single();
 
-        if (!existing) {
-            const { error } = await supabase
-                .from('points')
-                .insert({
-                    member_id: id,
-                    points: 0,
-                    last_update: new Date().toISOString()
-                });
+        if (!member) {
+            return;
+        }
 
-            if (error) console.error('Error initializing points:', error);
+        // If belmonts_points is null, set it to 0
+        if (member.belmonts_points === null) {
+            const { error } = await supabase
+                .from('members')
+                .update({
+                    belmonts_points: 0,
+                    updated_at: timestamp,
+                })
+                .eq('member_id', id);
+
+            if (error) {
+                console.error('Error initializing belmonts_points:', error.message);
+            }
         }
     } catch (error) {
-        console.error('Error initializing points:', error);
+        console.error('Error in initializePoints:', error);
     }
 }
 
@@ -178,36 +188,40 @@ async function addPoints(memberId, pointsToAdd) {
     if (!dbAvailable) return null;
     try {
         const id = parseInt(memberId, 10);
-        const { data: existing } = await supabase
-            .from('points')
-            .select('points')
+        const timestamp = new Date().toISOString();
+        
+        // Get current points from members table
+        const { data: member } = await supabase
+            .from('members')
+            .select('belmonts_points')
             .eq('member_id', id)
             .single();
 
-        if (!existing) {
-            await initializePoints(memberId);
-        }
-
-        const currentPoints = existing?.points || 0;
-        const newPoints = currentPoints + pointsToAdd;
-
-        const { error } = await supabase
-            .from('points')
-            .update({
-                points: newPoints,
-                last_update: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-            })
-            .eq('member_id', id);
-
-        if (error) {
-            console.error('Error adding points:', error);
+        if (!member) {
+            console.error('Member not found in members table:', id);
             return null;
         }
 
+        const currentPoints = member?.belmonts_points || 0;
+        const newPoints = currentPoints + pointsToAdd;
+
+        // Update ONLY the members table with new belmonts_points
+        const { error: memberError } = await supabase
+            .from('members')
+            .update({
+                belmonts_points: newPoints,
+                updated_at: timestamp,
+            })
+            .eq('member_id', id);
+
+        if (memberError) {
+            console.error('Failed to update members.belmonts_points:', memberError.message);
+            return null;
+        }
+        
         return newPoints;
     } catch (error) {
-        console.error('Error adding points:', error);
+        console.error('Error in addPoints:', error);
         return null;
     }
 }
@@ -216,17 +230,66 @@ async function getPoints(memberId) {
     if (!dbAvailable) return 0;
     try {
         const id = parseInt(memberId, 10);
-        const { data, error } = await supabase
-            .from('points')
-            .select('*')
+        
+        // Get points from members table (belmonts_points)
+        const { data: member, error } = await supabase
+            .from('members')
+            .select('belmonts_points')
             .eq('member_id', id)
             .single();
 
-        if (error) console.error('Error fetching points:', error);
-        return data?.points || 0;
+        if (error) {
+            console.error('Failed to fetch member:', error.message);
+            return 0;
+        }
+        
+        const points = member?.belmonts_points || 0;
+        return points;
     } catch (error) {
-        console.error('Error getting points:', error);
+        console.error('Error in getPoints:', error);
         return 0;
+    }
+}
+
+async function incrementProblemsSolved(memberId) {
+    if (!dbAvailable) return false;
+    try {
+        const id = parseInt(memberId, 10);
+        const timestamp = new Date().toISOString();
+
+        // Get current problem_solved count
+        const { data: member } = await supabase
+            .from('members')
+            .select('problem_solved')
+            .eq('member_id', id)
+            .single();
+
+        if (!member) {
+            console.error('Member not found:', id);
+            return false;
+        }
+
+        const currentCount = member?.problem_solved || 0;
+        const newCount = currentCount + 1;
+
+        // Update problem_solved in members table
+        const { error } = await supabase
+            .from('members')
+            .update({
+                problem_solved: newCount,
+                updated_at: timestamp,
+            })
+            .eq('member_id', id);
+
+        if (error) {
+            console.error('Failed to update problem_solved:', error.message);
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Error in incrementProblemsSolved:', error);
+        return false;
     }
 }
 
@@ -572,11 +635,39 @@ async function getMemberByDiscordUsername(discordUsername) {
             .eq('discord_username', discordUsername)
             .single();
 
+        if (data) {
+            return data;
+        }
+
         if (error && error.code !== 'PGRST116') {
             console.error('Error fetching member by discord username:', error);
         }
 
-        return data;
+        const { data: byUsername, error: usernameError } = await supabase
+            .from('members')
+            .select('*')
+            .eq('username', discordUsername)
+            .single();
+
+        if (byUsername) {
+            return byUsername;
+        }
+
+        if (usernameError && usernameError.code !== 'PGRST116') {
+            console.error('Error fetching member by username:', usernameError);
+        }
+
+        const { data: byDisplayName, error: displayNameError } = await supabase
+            .from('members')
+            .select('*')
+            .eq('display_name', discordUsername)
+            .single();
+
+        if (displayNameError && displayNameError.code !== 'PGRST116') {
+            console.error('Error fetching member by display name:', displayNameError);
+        }
+
+        return byDisplayName;
     } catch (error) {
         console.error('Error getting member by discord username:', error);
         return null;
@@ -909,6 +1000,7 @@ module.exports = {
     getAllPoints,
     setPoints,
     getLeaderboard,
+    incrementProblemsSolved,
     getMembersWithBirthdayToday,
     getMembersWithUpcomingBirthdays,
     // Discord Activity functions

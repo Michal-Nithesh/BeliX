@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { EmbedBuilder } = require('discord.js');
+const { getDelayUntilNextScheduledTime } = require('../utils/timezoneUtils');
 
 const TERMINOLOGY_FILE = path.join(__dirname, '..', 'json', 'terminologies.json');
 
@@ -102,24 +103,10 @@ async function postDailyTerminology(client) {
  * Schedule daily terminology posting at 8:00 PM
  */
 function scheduleDailyTerminology(client) {
-    // Calculate time until next 8:00 PM
-    function getTimeUntil8PM() {
-        const now = new Date();
-        const target = new Date();
-        target.setHours(20, 0, 0, 0); // 8:00 PM
-        
-        // If it's already past 8 PM today, schedule for tomorrow
-        if (now > target) {
-            target.setDate(target.getDate() + 1);
-        }
-        
-        return target - now;
-    }
-    
     // Schedule the first posting
     function scheduleNext() {
-        const delay = getTimeUntil8PM();
-        console.log(`📅 Next terminology post scheduled in ${Math.round(delay / 1000 / 60)} minutes (8:00 PM)`);
+        const delay = getDelayUntilNextScheduledTime(20, 0); // 8:00 PM
+        console.log(`📅 Next terminology post scheduled in ${Math.round(delay / 1000 / 60)} minutes (8:00 PM Asia/Kolkata)`);
         
         setTimeout(async () => {
             await postDailyTerminology(client);

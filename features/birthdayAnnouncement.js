@@ -1,5 +1,6 @@
 const { EmbedBuilder, ChannelType } = require('discord.js');
 const { getMembersWithBirthdayToday } = require('../database/db');
+const { getDelayUntilNextScheduledTime } = require('../utils/timezoneUtils');
 
 const BIRTHDAY_CHECK_HOUR = 6; // 6:00 AM
 const BIRTHDAY_CHECK_MINUTE = 0;
@@ -113,21 +114,11 @@ async function checkAndAnnounceBirthdays(client) {
  * Schedule birthday checks
  */
 function scheduleBirthdayCheck(client) {
-    // Calculate time until next 6:00 AM
-    const now = new Date();
-    const scheduled = new Date(now);
-    scheduled.setHours(BIRTHDAY_CHECK_HOUR, BIRTHDAY_CHECK_MINUTE, 0, 0);
-    
-    // If it's already past 6 AM today, schedule for tomorrow
-    if (now >= scheduled) {
-        scheduled.setDate(scheduled.getDate() + 1);
-    }
-    
-    const msUntilCheck = scheduled.getTime() - now.getTime();
+    const msUntilCheck = getDelayUntilNextScheduledTime(BIRTHDAY_CHECK_HOUR, BIRTHDAY_CHECK_MINUTE);
     const hoursUntil = Math.floor(msUntilCheck / (1000 * 60 * 60));
     const minutesUntil = Math.floor((msUntilCheck % (1000 * 60 * 60)) / (1000 * 60));
     
-    console.log(`📅 Birthday check scheduled in ${hoursUntil}h ${minutesUntil}m (${BIRTHDAY_CHECK_HOUR}:${BIRTHDAY_CHECK_MINUTE.toString().padStart(2, '0')} AM)`);
+    console.log(`📅 Birthday check scheduled in ${hoursUntil}h ${minutesUntil}m (${BIRTHDAY_CHECK_HOUR}:${BIRTHDAY_CHECK_MINUTE.toString().padStart(2, '0')} AM Asia/Kolkata)`);
     
     setTimeout(() => {
         checkAndAnnounceBirthdays(client);

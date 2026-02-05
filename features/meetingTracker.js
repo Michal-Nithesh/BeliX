@@ -8,6 +8,7 @@ const {
     TextInputStyle,
 } = require('discord.js');
 const { addPoints, initializePoints, createMeeting, updateMeetingEnd, recordAttendance } = require('../database/db');
+const { getDelayUntilNextScheduledTime } = require('../utils/timezoneUtils');
 
 const MEETING_VOICE_CHANNEL_ID = process.env.MEETING_VOICE_CHANNEL_ID || '1304848107095326830';
 const MEETING_TEXT_CHANNEL_ID = process.env.MEETING_TEXT_CHANNEL_ID || '1304848107095326831';
@@ -39,7 +40,7 @@ function normalizeName(value) {
 }
 
 function formatTimeLabel(date) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' });
 }
 
 function formatDuration(ms) {
@@ -192,15 +193,12 @@ function getOrCreateState(guildId) {
 
 function scheduleDailyPrompt(client, guild) {
     const scheduleNext = () => {
-        const now = new Date();
-        const next = new Date(now);
-        next.setHours(MEETING_PROMPT_HOUR, MEETING_PROMPT_MINUTE, 0, 0);
+        const delay = getDelayUntilNextScheduledTime(MEETING_PROMPT_HOUR, MEETING_PROMPT_MINUTE);
+        const hours = Math.floor(delay / (1000 * 60 * 60));
+        const minutes = Math.floor((delay % (1000 * 60 * 60)) / (1000 * 60));
+        
+        console.log(`📅 Meeting prompt scheduled in ${hours}h ${minutes}m (${MEETING_PROMPT_HOUR}:${MEETING_PROMPT_MINUTE.toString().padStart(2, '0')} Asia/Kolkata) for ${guild.name}`);
 
-        if (next <= now) {
-            next.setDate(next.getDate() + 1);
-        }
-
-        const delay = next - now;
         setTimeout(async () => {
             await sendMeetingPrompt(client, guild);
             scheduleNext();
@@ -355,7 +353,7 @@ async function endMeeting(guild) {
         await recordAttendance(state.meetingId, attendanceRecords);
     }
 
-    const meetingDate = new Date(state.startAt).toLocaleDateString();
+    const meetingDate = new Date(state.startAt).toLocaleDateString('en-US', { timeZone: 'Asia/Kolkata' });
     const durationLabel = formatDuration(durationMs);
     const reportEmbed = buildMeetingReportEmbed({
         meetingDate,

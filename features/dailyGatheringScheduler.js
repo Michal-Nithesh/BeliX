@@ -1,5 +1,6 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { confirmGathering, cancelGathering, getGatheringStatus } = require('../database/db');
+const { getDelayUntilNextScheduledTime, getCurrentTimeInTimeZone } = require('../utils/timezoneUtils');
 
 const GATHERING_MANAGERS = new Set(['geonithin', 'sriiiharshiii', 'michalnithesh']);
 const GATHERING_PROMPT_HOUR = 18; // 6:00 PM
@@ -83,19 +84,14 @@ function buildGatheringPromptButtons() {
 
 function scheduleDailyGatheringPrompt(client, guild) {
     const scheduleNext = () => {
-        const now = new Date();
-        const next = new Date(now);
-        next.setHours(GATHERING_PROMPT_HOUR, GATHERING_PROMPT_MINUTE, 0, 0);
-
-        if (next <= now) {
-            next.setDate(next.getDate() + 1);
-        }
-
-        const delay = next - now;
+        const delay = getDelayUntilNextScheduledTime(GATHERING_PROMPT_HOUR, GATHERING_PROMPT_MINUTE);
         const hours = Math.floor(delay / (1000 * 60 * 60));
         const minutes = Math.floor((delay % (1000 * 60 * 60)) / (1000 * 60));
         
-        console.log(`📅 Daily gathering scheduled in ${hours}h ${minutes}m (${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}) for guild: ${guild.name}`);
+        const nextTime = getCurrentTimeInTimeZone();
+        nextTime.setHours(GATHERING_PROMPT_HOUR, GATHERING_PROMPT_MINUTE, 0, 0);
+        
+        console.log(`📅 Daily gathering scheduled in ${hours}h ${minutes}m (${nextTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}) for guild: ${guild.name}`);
         
         setTimeout(async () => {
             await sendGatheringPrompt(client, guild);

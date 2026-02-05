@@ -1,26 +1,64 @@
 const fs = require('fs');
 const path = require('path');
+const { getDelayUntilNextScheduledTime, getCurrentTimeInTimeZone } = require('../utils/timezoneUtils');
 
 let questionScheduler = null;
+
+function getTodayInTimeZone() {
+  const nowInTz = getCurrentTimeInTimeZone();
+  return new Date(nowInTz.getFullYear(), nowInTz.getMonth(), nowInTz.getDate());
+}
+
+function resolveQuestionNumber({ questions, startQuestionNumber, startDate }) {
+  if (!startQuestionNumber || !startDate) {
+    return null;
+  }
+
+  const start = new Date(`${startDate}T00:00:00+05:30`);
+  const today = getTodayInTimeZone();
+  const daysSinceStart = Math.max(0, Math.floor((today - start) / (1000 * 60 * 60 * 24)));
+  const maxDay = Math.max(...questions.map(q => q.Day));
+  const questionNumberRaw = startQuestionNumber + daysSinceStart;
+  const normalizedNumber = ((questionNumberRaw - 1) % maxDay) + 1;
+
+  return { questionNumberRaw, normalizedNumber, maxDay };
+}
 
 function getQuestionForDay() {
   try {
     const questionsPath = path.join(__dirname, '../json/dailyQuestion.json');
-    const questions = JSON.parse(fs.readFileSync(questionsPath, 'utf-8'));
+    const data = JSON.parse(fs.readFileSync(questionsPath, 'utf-8'));
+    const questions = data.Questions || data;
     
-    // Get current day of month (1-30, cycling)
-    const today = new Date();
-    const dayOfMonth = today.getDate();
-    
-    // Find question for this day
-    const questionObj = questions.find(q => q.Day === dayOfMonth);
-    
-    if (!questionObj) {
-      console.log(`⚠️  No question found for Day ${dayOfMonth}`);
-      return null;
+    const resolution = resolveQuestionNumber({
+      questions,
+      startQuestionNumber: data.startQuestionNumber,
+      startDate: data.startDate,
+    });
+
+    let questionObj = null;
+    let displayDay = null;
+
+    if (resolution) {
+      questionObj = questions.find(q => q.Day === resolution.normalizedNumber);
+      displayDay = resolution.questionNumberRaw;
+      if (resolution.questionNumberRaw > resolution.maxDay) {
+        console.log(`ℹ️ Question number ${resolution.questionNumberRaw} wrapped to ${resolution.normalizedNumber}.`);
+      }
+    } else {
+      // Fallback: current day of month (1-31)
+      const today = getTodayInTimeZone();
+      const dayOfMonth = today.getDate();
+      questionObj = questions.find(q => q.Day === dayOfMonth);
+      displayDay = dayOfMonth;
     }
     
-    return questionObj;
+    if (!questionObj) {
+      console.log(`⚠️  No question found for Day ${displayDay ?? 'unknown'}`);
+      return null;
+    }
+
+    return { ...questionObj, DisplayDay: displayDay };
   } catch (error) {
     console.error('Error reading daily questions:', error);
     return null;
@@ -32,7 +70,7 @@ function createQuestionEmbed(question) {
   
   const embed = new EmbedBuilder()
     .setColor('#FF6B9D')
-    .setTitle(`📝 Day ${question.Day}: ${question.Question}`)
+    .setTitle(`📝 Day ${question.DisplayDay ?? question.Day}: ${question.Question}`)
     .addFields(
       { name: '📥 Input', value: `\`\`\`${question.Input}\`\`\``, inline: false },
       { name: '📤 Output', value: `\`\`\`${question.Output}\`\`\``, inline: false },
@@ -88,20 +126,7 @@ async function postDailyQuestion(client) {
 }
 
 function scheduleQuestionPost(client) {
-  const now = new Date();
-  const targetHour = 8; // 8:00 AM
-  const targetMinute = 0;
-  
-  // Calculate next 8:00 AM
-  let nextRun = new Date();
-  nextRun.setHours(targetHour, targetMinute, 0, 0);
-  
-  // If 8:00 AM has already passed today, schedule for tomorrow
-  if (nextRun <= now) {
-    nextRun.setDate(nextRun.getDate() + 1);
-  }
-  
-  const timeUntilRun = nextRun - now;
+  const timeUntilRun = getDelayUntilNextScheduledTime(8, 0); // 8:00 AM
   
   // Clear existing scheduler
   if (questionScheduler) {
@@ -118,7 +143,7 @@ function scheduleQuestionPost(client) {
   const hoursLeft = Math.floor(timeUntilRun / (1000 * 60 * 60));
   const minutesLeft = Math.floor((timeUntilRun % (1000 * 60 * 60)) / (1000 * 60));
   
-  console.log(`📅 Daily question scheduler initialized (Next: ${hoursLeft}h ${minutesLeft}m at 8:00 AM)`);
+  console.log(`📅 Daily question scheduler initialized (Next: ${hoursLeft}h ${minutesLeft}m at 8:00 AM Asia/Kolkata)`);
 }
 
 module.exports = {
