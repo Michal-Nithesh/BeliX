@@ -47,7 +47,7 @@ function getLeaderboardButtons(page = 1, totalPages = 1) {
 function buildMyPointsEmbed(memberData, pointsData) {
     const username = memberData?.display_name || memberData?.username || 'Unknown';
     const totalPoints = pointsData?.points || 0;
-    const lastUpdate = pointsData?.last_update ? new Date(pointsData.last_update).toLocaleString() : 'Never';
+    const lastUpdate = pointsData?.last_update ? new Date(pointsData.last_update).toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }) : 'Never';
     
     return new EmbedBuilder()
         .setColor('#00ff00')

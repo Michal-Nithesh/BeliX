@@ -1,4 +1,5 @@
 const { EmbedBuilder, ChannelType } = require('discord.js');
+const { getDelayUntilNextScheduledTime, getTimeWithTimezoneInfo, formatTimeInTimeZone } = require('../utils/timezoneUtils');
 
 // Scheduled reminder times (24-hour format)
 const REMINDERS = [
@@ -99,22 +100,13 @@ async function sendScheduledReminder(client, reminder) {
  * Schedule a reminder to run at a specific time daily
  */
 function scheduleReminder(client, reminder) {
-    const now = new Date();
-    const scheduled = new Date(now);
-    scheduled.setHours(reminder.hour, reminder.minute, 0, 0);
-
-    // If the time has already passed today, schedule for tomorrow
-    if (now >= scheduled) {
-        scheduled.setDate(scheduled.getDate() + 1);
-    }
-
-    const msUntilReminder = scheduled.getTime() - now.getTime();
+    const msUntilReminder = getDelayUntilNextScheduledTime(reminder.hour, reminder.minute);
     const hoursUntil = Math.floor(msUntilReminder / (1000 * 60 * 60));
     const minutesUntil = Math.floor((msUntilReminder % (1000 * 60 * 60)) / (1000 * 60));
 
     console.log(
         `📅 "${reminder.name}" scheduled in ${hoursUntil}h ${minutesUntil}m ` +
-        `(${reminder.hour.toString().padStart(2, '0')}:${reminder.minute.toString().padStart(2, '0')})`
+        `(${reminder.hour.toString().padStart(2, '0')}:${reminder.minute.toString().padStart(2, '0')} Asia/Kolkata)`
     );
 
     // Schedule first execution
