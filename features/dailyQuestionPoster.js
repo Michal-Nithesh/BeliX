@@ -111,7 +111,7 @@ async function postDailyQuestion(client) {
       if (channel) {
         try {
           await channel.send({
-            content: '<@&1304899208819671100> Daily Coding Challenge! 🚀', // @Belmonts role
+            content: '@Belmonts Daily Coding Challenge! 🚀', // @Belmonts role
             embeds: [embed]
           });
           console.log(`✓ Posted daily question to ${guild.name}`);
