@@ -40,6 +40,7 @@ async function syncMember(member, guild) {
 
         const memberData = {
             member_id: memberId,
+            members_discord_id: memberId,
             username: member.user.username,
             display_name: member.displayName || member.user.username,
             role: member.roles.highest?.name || 'Member',
@@ -56,7 +57,7 @@ async function syncMember(member, guild) {
             const { error } = await supabase
                 .from('members')
                 .update(memberData)
-                .eq('member_id', memberId);
+                .eq('members_discord_id', memberId);
 
             if (error) console.error('Error updating member:', error);
         } else {
@@ -68,6 +69,7 @@ async function syncMember(member, guild) {
                 });
 
             if (error) console.error('Error inserting member:', error);
+            if (!error) console.log(`✓ Member synced: Discord ID ${memberId}`);
         }
     } catch (error) {
         console.error('Error syncing member:', error);
@@ -81,7 +83,7 @@ async function getMember(memberId) {
         const { data, error } = await supabase
             .from('members')
             .select('*')
-            .eq('member_id', id)
+            .eq('members_discord_id', id)
             .single();
 
         // PGRST116 means no rows found, which is expected when member doesn't exist
@@ -146,7 +148,7 @@ async function updateMemberBirthday(memberId, birthday) {
                 birthday: birthday ? birthday.toISOString().split('T')[0] : null,
                 updated_at: new Date().toISOString(),
             })
-            .eq('member_id', id);
+            .eq('members_discord_id', id);
 
         if (error) console.error('Error updating birthday:', error);
         return !error;
@@ -244,8 +246,8 @@ async function addPoints(memberId, pointsToAdd) {
         // Get current points from members table
         const { data: member } = await supabase
             .from('members')
-            .select('belmonts_points')
-            .eq('member_id', id)
+            .select('belmonts_points, member_id')
+            .eq('members_discord_id', id)
             .single();
 
         if (!member) {
@@ -263,7 +265,7 @@ async function addPoints(memberId, pointsToAdd) {
                 belmonts_points: newPoints,
                 updated_at: timestamp,
             })
-            .eq('member_id', id);
+            .eq('members_discord_id', id);
 
         if (memberError) {
             console.error('Failed to update members.belmonts_points:', memberError.message);
@@ -274,7 +276,7 @@ async function addPoints(memberId, pointsToAdd) {
         const { error: pointsError } = await supabase
             .from('points')
             .insert({
-                member_id: id,
+                member_id: member.member_id,
                 points: pointsToAdd,
                 last_update: timestamp,
                 updated_at: timestamp,
@@ -926,6 +928,11 @@ async function confirmGathering(memberId, username, gatheringDate, gatheringTime
         const dateStr = gatheringDate ? new Date(gatheringDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
         const timeStr = typeof gatheringTime === 'number' ? `${gatheringTime}:00:00` : gatheringTime;
         
+        // Check if user exists in members table by Discord ID
+        const member = await getMember(memberId);
+        // Only set confirmed_by_id if user is synced (store their actual member_id from DB, not Discord ID)
+        const confirmedById = member ? member.member_id : null;
+        
         // Check if gathering confirmation already exists for today
         const { data: existing } = await supabase
             .from('gathering_confirmations')
@@ -940,7 +947,7 @@ async function confirmGathering(memberId, username, gatheringDate, gatheringTime
                 .update({
                     gathering_time: timeStr,
                     is_confirmed: true,
-                    confirmed_by_id: memberId,
+                    confirmed_by_id: confirmedById,
                     confirmed_by_username: username,
                     confirmed_at: new Date().toISOString(),
                     cancelled_by_id: null,
@@ -952,11 +959,7 @@ async function confirmGathering(memberId, username, gatheringDate, gatheringTime
                 .select();
 
             if (error) {
-                if (error.code === '23503') {
-                    console.debug('Note: User not yet synced to members table. Foreign key constraint.');
-                } else {
-                    console.error('Error confirming gathering:', error);
-                }
+                console.error('Error confirming gathering:', error);
                 return null;
             }
             return data?.[0] || null;
@@ -968,7 +971,7 @@ async function confirmGathering(memberId, username, gatheringDate, gatheringTime
                     gathering_date: dateStr,
                     gathering_time: timeStr,
                     is_confirmed: true,
-                    confirmed_by_id: memberId,
+                    confirmed_by_id: confirmedById,
                     confirmed_by_username: username,
                     confirmed_at: new Date().toISOString(),
                     created_at: new Date().toISOString(),
@@ -977,11 +980,7 @@ async function confirmGathering(memberId, username, gatheringDate, gatheringTime
                 .select();
 
             if (error) {
-                if (error.code === '23503') {
-                    console.debug('Note: User not yet synced to members table. Foreign key constraint.');
-                } else {
-                    console.error('Error creating gathering confirmation:', error);
-                }
+                console.error('Error creating gathering confirmation:', error);
                 return null;
             }
             return data?.[0] || null;
@@ -997,6 +996,13 @@ async function cancelGathering(gatheringDate, cancelledById = null, cancelledByU
     try {
         const dateStr = gatheringDate ? new Date(gatheringDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
         
+        // Check if user is synced and store their actual member_id (not Discord ID)
+        let finalCancelledById = null;
+        if (cancelledById) {
+            const member = await getMember(cancelledById);
+            finalCancelledById = member ? member.member_id : null;
+        }
+        
         const { data, error } = await supabase
             .from('gathering_confirmations')
             .update({
@@ -1004,7 +1010,7 @@ async function cancelGathering(gatheringDate, cancelledById = null, cancelledByU
                 confirmed_by_id: null,
                 confirmed_by_username: null,
                 confirmed_at: null,
-                cancelled_by_id: cancelledById,
+                cancelled_by_id: finalCancelledById,
                 cancelled_by_username: cancelledByUsername,
                 cancelled_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),

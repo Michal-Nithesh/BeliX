@@ -1,19 +1,17 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, MessageFlags } = require('discord.js');
-const { confirmGathering, cancelGathering, updateGatheringTime, getGatheringStatus, createMeeting, updateMeetingEnd, recordAttendance, getMeetingAttendance } = require('../database/db');
-const { getDelayUntilNextScheduledTime, getCurrentTimeInTimeZone } = require('../utils/timezoneUtils');
+const { confirmGathering, cancelGathering, updateGatheringTime, getGatheringStatus, createMeeting, recordAttendance, addPoints } = require('../database/db');
+const { getDelayUntilNextScheduledTime, getCurrentTimeInTimeZone, formatTimeInTimeZone } = require('../utils/timezoneUtils');
 
 const GATHERING_PROMPT_HOUR = 18; // 6:00 PM
 const GATHERING_PROMPT_MINUTE = 0;
 const DEFAULT_GATHERING_HOUR = 20; // 8:00 PM (default)
 const GATHERING_VOICE_ROOM = '1304848107095326830'; // Voice room channel ID
 const GATHERING_DURATION_MS = 60 * 60 * 1000; // 1 hour
+const REPORT_CHANNEL_ID = '1361235736774447247'; // Report channel
+const REMINDER_MINUTES_BEFORE = 5; // 5-minute reminder
 
 // Track active gathering sessions
 const gatheringSessions = new Map();
-
-function normalizeName(value) {
-    return (value || '').toLowerCase().trim();
-}
 
 function findTinkeringChannel(guild) {
     const channelId = process.env.tinkering;
@@ -148,6 +146,27 @@ function buildCancellationEmbed(cancelledBy) {
         .setTimestamp();
 }
 
+function buildReminderEmbed(gatheringTime) {
+    let timeString = '';
+    if (gatheringTime === 19.5) {
+        timeString = '7:30 PM';
+    } else {
+        const hour = Math.floor(gatheringTime);
+        const meridiem = gatheringTime >= 12 ? 'PM' : 'AM';
+        timeString = `${hour}:00 ${meridiem}`;
+    }
+    
+    return new EmbedBuilder()
+        .setColor('#FFA500')
+        .setTitle(`⏰ Gathering Starting in 5 Minutes!`)
+        .setDescription(`The daily gathering starts at ${timeString}. Join us in the voice room! 🎤`)
+        .addFields(
+            { name: 'Time', value: timeString, inline: true },
+            { name: 'Location', value: '📯 Common hall (Voice room)', inline: true }
+        )
+        .setTimestamp();
+}
+
 function buildGatheringPromptButtons() {
     return new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -186,7 +205,6 @@ function formatDuration(ms) {
 
 function buildMeetingReportEmbed(meetingTitle, attendanceData, totalDurationMs, plannedDurationMs = GATHERING_DURATION_MS) {
     const durationLabel = formatDuration(totalDurationMs);
-    const plannedDurationLabel = formatDuration(plannedDurationMs);
     const overtimeMs = Math.max(0, totalDurationMs - plannedDurationMs);
     const overtimeLabel = overtimeMs > 0 ? formatDuration(overtimeMs) : '0m';
 
@@ -208,7 +226,7 @@ function buildMeetingReportEmbed(meetingTitle, attendanceData, totalDurationMs, 
 
     const fullAttendance = attendanceData.filter(p => (p.durationMs || 0) >= (plannedDurationMs * 0.95)).length;
 
-    const embedDescription = `📝 ${meetingTitle}\n🎙️ Channel: Gathering\n⏱️ Total: ${durationLabel}\n⏱️ Overtime: ${overtimeLabel}\n\n👥 Complete Attendance:\n\n${attendanceLines.join('\n')}\n\n📈 Total: ${attendanceData.length} | Full (95%+): ${fullAttendance}`;
+    const embedDescription = `📝 ${meetingTitle}\n🎙️ Channel: Common Hall\n⏱️ Total: ${durationLabel}\n⏱️ Overtime: ${overtimeLabel}\n\n👥 Complete Attendance:\n\n${attendanceLines.join('\n')}\n\n📈 Total: ${attendanceData.length} | Full (95%+): ${fullAttendance}`;
 
     const embed = new EmbedBuilder()
         .setColor('#12b76a')
@@ -223,15 +241,19 @@ async function startGatheringTracking(guild, gatheringTime) {
     const guildId = guild.id;
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0];
-    const meetingTitle = `Clan Gathering #${Math.floor(Math.random() * 1000)} - Discussion`;
+    const meetingTitle = `Daily Gathering - ${formatTimeInTimeZone(today, 'date')}`;
 
     const voiceChannel = findGatheringVoiceChannel(guild);
     if (!voiceChannel) {
-        console.warn(`⚠️ Voice channel not found for gathering in ${guild.name}`);
+        console.warn(`\n⚠️ [GATHERING] Voice channel not found for ${guild.name}`);
         return;
     }
 
-    // Create a session object
+    console.log(`\n🎙️ [GATHERING] Starting tracking for ${guild.name}`);
+    console.log(`   Meeting: "${meetingTitle}"`);
+    console.log(`   Time: ${formatTimeInTimeZone(today, 'datetime')}`);
+    console.log(`   Members in voice channel: ${voiceChannel.members.size}`);
+
     const session = {
         guildId,
         voiceChannelId: voiceChannel.id,
@@ -244,15 +266,12 @@ async function startGatheringTracking(guild, gatheringTime) {
 
     // Create meeting in database
     try {
-        // Convert gatheringTime to proper time format
         let meetingTimeStr = '';
         if (gatheringTime === 19.5) {
             meetingTimeStr = '19:30:00';
-        } else if (typeof gatheringTime === 'string') {
-            meetingTimeStr = gatheringTime; // Already in HH:MM:SS format
         } else {
             const hour = Math.floor(gatheringTime);
-            meetingTimeStr = `${hour}:00:00`;
+            meetingTimeStr = `${String(hour).padStart(2, '0')}:00:00`;
         }
         
         const meeting = await createMeeting({
@@ -265,27 +284,28 @@ async function startGatheringTracking(guild, gatheringTime) {
 
         if (meeting) {
             session.meetingId = meeting.meeting_id;
-            console.log(`📝 Meeting created with ID: ${session.meetingId}`);
+            console.log(`✓ Meeting created - ID: ${session.meetingId}`);
         }
     } catch (error) {
-        console.error('Error creating meeting:', error);
+        console.error(`❌ Error creating meeting:`, error.message);
     }
 
     // Track all current voice channel members
     for (const member of voiceChannel.members.values()) {
         if (!member.user.bot) {
-            session.participants.set(member.user.id, {
-                memberId: member.user.id,
+            session.participants.set(member.id, {
+                memberId: member.id,
                 username: member.user.username,
                 displayName: member.displayName || member.user.username,
-                joinMs: Date.now(),
+                joinMs: 0,  // Zero because they were already in channel
                 durationMs: 0,
             });
+            console.log(`   ✓ Tracking: ${member.displayName || member.user.username}`);
         }
     }
 
     gatheringSessions.set(guildId, session);
-    console.log(`🎙️ Gathering tracking started in ${guild.name} - ${session.participants.size} participants`);
+    console.log(`✓ Gathering tracking started - ${session.participants.size} participants\n`);
 
     // Schedule meeting end after 1 hour
     setTimeout(async () => {
@@ -297,77 +317,115 @@ async function endGatheringTracking(guild) {
     const guildId = guild.id;
     const session = gatheringSessions.get(guildId);
 
-    if (!session) return;
+    if (!session) {
+        console.log(`⚠️ No active session for ${guild.name}`);
+        return;
+    }
+
+    console.log(`\n🏁 [GATHERING] Ending tracking for ${guild.name}`);
 
     const endMs = Date.now();
     const totalDurationMs = endMs - session.startMs;
 
-    // Calculate final durations
+    // Calculate final durations and attendance
     const attendanceRecords = [];
+    const attendanceData = [];
+    
     for (const participant of session.participants.values()) {
         const finalDurationMs = participant.durationMs + (endMs - participant.joinMs);
         participant.durationMs = finalDurationMs;
+        const durationMinutes = Math.floor(finalDurationMs / 60000);
+        const attendancePercentage = Math.min(100, Math.round((finalDurationMs / GATHERING_DURATION_MS) * 100));
+        const qualifiedForPoints = attendancePercentage >= 50;
 
         attendanceRecords.push({
             meeting_id: session.meetingId,
             member_id: parseInt(participant.memberId, 10),
             username: participant.username,
             display_name: participant.displayName,
-            joined_at: new Date(session.startMs + participant.joinMs).toISOString(),
+            joined_at: new Date(session.startMs).toISOString(),
             left_at: new Date(endMs).toISOString(),
-            total_duration_minutes: Math.floor(finalDurationMs / 60000),
-            attendance_percentage: Math.min(100, Math.round((finalDurationMs / GATHERING_DURATION_MS) * 100)),
-            points_awarded: 10,
+            total_duration_minutes: durationMinutes,
+            attendance_percentage: attendancePercentage,
+            points_awarded: qualifiedForPoints ? 10 : 0,
         });
+
+        attendanceData.push({
+            ...participant,
+            durationMs: finalDurationMs,
+        });
+
+        const pointsStatus = qualifiedForPoints ? `✓ 10 points awarded` : `✗ No points (${attendancePercentage}%)`;
+        console.log(`   ${participant.displayName}: ${durationMinutes}m (${attendancePercentage}%) - ${pointsStatus}`);
     }
 
-    // Record attendance in database
+    // Record attendance and award points
     if (session.meetingId && attendanceRecords.length > 0) {
         try {
-            await recordAttendance(session.meetingId, attendanceRecords);
-            await updateMeetingEnd(session.meetingId, {
-                end_time: new Date(endMs).toISOString(),
-                duration_minutes: Math.floor(totalDurationMs / 60000),
-                attended_members: session.participants.size,
-            });
-            console.log(`✅ Meeting ${session.meetingId} ended with ${session.participants.size} attendees`);
+            console.log(`\n📝 Recording attendance for ${attendanceRecords.length} members...`);
+            for (const record of attendanceRecords) {
+                await recordAttendance(session.meetingId, record);
+                
+                // Award points if 50%+ attendance
+                if (record.points_awarded > 0) {
+                    try {
+                        await addPoints(record.member_id, record.points_awarded);
+                        console.log(`   ✓ ${record.display_name}: +${record.points_awarded} belmonts points`);
+                    } catch (pointsError) {
+                        console.error(`   ❌ Failed to award points to ${record.display_name}:`, pointsError.message);
+                    }
+                }
+            }
+            console.log(`✓ Attendance recorded and points awarded`);
         } catch (error) {
-            console.error('Error recording attendance:', error);
+            console.error(`❌ Error recording attendance:`, error.message);
         }
     }
 
     // Build and send report
-    const commonHall = findCommonHallChannel(guild);
-    if (commonHall) {
-        try {
-            const reportEmbed = buildMeetingReportEmbed(
-                session.meetingTitle,
-                Array.from(session.participants.values()),
-                totalDurationMs
-            );
-            await commonHall.send({ embeds: [reportEmbed] });
-            console.log(`📊 Meeting report sent to ${commonHall.name}`);
-        } catch (error) {
-            console.error('Error sending meeting report:', error);
+    try {
+        const reportEmbed = buildMeetingReportEmbed(session.meetingTitle, attendanceData, totalDurationMs);
+        
+        // Try to send to the specified report channel
+        const reportChannel = guild.client.channels.cache.get(REPORT_CHANNEL_ID);
+        if (reportChannel && reportChannel.isTextBased()) {
+            await reportChannel.send({ embeds: [reportEmbed] });
+            console.log(`\n📋 Report sent to channel ${REPORT_CHANNEL_ID}`);
+        } else {
+            // Fallback to common hall
+            const commonHall = findCommonHallChannel(guild);
+            if (commonHall) {
+                await commonHall.send({ embeds: [reportEmbed] });
+                console.log(`\n📋 Report sent to #${commonHall.name} (fallback)`);
+            } else {
+                console.warn(`⚠️ Could not find report channel or common hall`);
+            }
         }
+    } catch (error) {
+        console.error(`❌ Error sending report:`, error.message);
     }
 
     // Clean up session
     gatheringSessions.delete(guildId);
-    console.log(`🏁 Gathering tracking ended for ${guild.name}`);
+    console.log(`✓ Gathering tracking ended\n`);
 }
 
 function scheduleDailyGatheringPrompt(client, guild) {
-    const scheduleNext = () => {
+    const rescheduler = () => {
         const delay = getDelayUntilNextScheduledTime(GATHERING_PROMPT_HOUR, GATHERING_PROMPT_MINUTE);
+        const hoursUntil = Math.floor(delay / (1000 * 60 * 60));
+        const minutesUntil = Math.floor((delay % (1000 * 60 * 60)) / (1000 * 60));
+        
+        console.log(`📅 [${guild.name}] Next gathering prompt in ${hoursUntil}h ${minutesUntil}m`);
         
         setTimeout(async () => {
+            console.log(`\n📢 [${guild.name}] Sending gathering confirmation prompt...`);
             await sendGatheringPrompt(client, guild);
-            scheduleNext();
+            rescheduler(); // Reschedule for next day
         }, delay);
     };
 
-    scheduleNext();
+    rescheduler();
 }
 
 async function sendGatheringPrompt(client, guild) {
@@ -377,7 +435,6 @@ async function sendGatheringPrompt(client, guild) {
         return;
     }
 
-    // Get gathering time from database (or use default)
     const today = new Date();
     const status = await getGatheringStatus(today);
     let currentGatheringTime = DEFAULT_GATHERING_HOUR;
@@ -394,8 +451,25 @@ async function sendGatheringPrompt(client, guild) {
             embeds: [embed],
             components: [buttons],
         });
+        console.log(`✓ Prompt sent to #${channel.name}`);
     } catch (error) {
-        console.error('Error sending gathering prompt:', error);
+        console.error(`Error sending gathering prompt:`, error.message);
+    }
+}
+
+async function sendGatheringReminder(client, guild, gatheringTime) {
+    const channel = findCommonHallChannel(guild);
+    if (!channel) {
+        console.warn(`⚠️ Common hall channel not found in ${guild.name}`);
+        return;
+    }
+
+    const embed = buildReminderEmbed(gatheringTime);
+    try {
+        await channel.send({ embeds: [embed] });
+        console.log(`📬 5-minute reminder sent to #${channel.name}`);
+    } catch (error) {
+        console.error(`Error sending reminder:`, error.message);
     }
 }
 
@@ -409,175 +483,177 @@ function handleGatheringConfirmation(client) {
         const guild = interaction.guild;
         const today = new Date();
         const memberId = parseInt(interaction.user.id, 10);
+        const memberName = interaction.member?.displayName || interaction.user.username;
+
+        console.log(`\n✋ [${guild.name}] Button: ${interaction.customId} by ${memberName}`);
+
+        // Try to defer interaction immediately
+        let deferSuccess = false;
+        if (!interaction.deferred && !interaction.replied) {
+            try {
+                await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+                deferSuccess = true;
+            } catch (deferError) {
+                console.warn(`Could not defer interaction: ${deferError.message}`);
+                deferSuccess = false;
+            }
+        } else {
+            // Already deferred or replied
+            deferSuccess = interaction.deferred;
+        }
 
         try {
-            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
-            // Handle time change buttons
-            if (interaction.customId === 'gather_time_7pm') {
-                const newTime = 19; // 7:00 PM
-                await updateGatheringTime(today, newTime);
-
-                // Update the original message with new time
-                const timeString = `${newTime}:00 PM`;
-                const updatedEmbed = buildGatheringPromptEmbed(newTime);
-                const buttons = buildGatheringPromptButtons();
-
-                await interaction.message.edit({
-                    embeds: [updatedEmbed],
-                    components: [buttons]
-                });
-
-                await interaction.editReply({
-                    content: `⏰ Gathering time updated to ${timeString}!`
-                });
-            } else if (interaction.customId === 'gather_time_8pm') {
-                const newTime = 20; // 8:00 PM
-                await updateGatheringTime(today, newTime);
-
-                // Update the original message with new time
-                const timeString = `${newTime}:00 PM`;
-                const updatedEmbed = buildGatheringPromptEmbed(newTime);
-                const buttons = buildGatheringPromptButtons();
-
-                await interaction.message.edit({
-                    embeds: [updatedEmbed],
-                    components: [buttons]
-                });
-
-                await interaction.editReply({
-                    content: `⏰ Gathering time updated to ${timeString}!`
-                });
-            } else if (interaction.customId === 'gather_time_7_30pm') {
-                const newTime = '19:30:00'; // 7:30 PM
-                await updateGatheringTime(today, newTime);
-
-                // Update the original message with new time
-                const timeString = '7:30 PM';
-                const updatedEmbed = buildGatheringPromptEmbed(19.5);
-                const buttons = buildGatheringPromptButtons();
-
-                await interaction.message.edit({
-                    embeds: [updatedEmbed],
-                    components: [buttons]
-                });
-
-                await interaction.editReply({
-                    content: `⏰ Gathering time updated to ${timeString}!`
-                });
-            } else if (interaction.customId === 'gather_confirm') {
-                // Get the current gathering time from database (or use default)
+            if (interaction.customId === 'gather_confirm') {
+                // Get the current gathering time
                 const status = await getGatheringStatus(today);
                 const currentTime = status?.gathering_time ? parseInt(status.gathering_time.split(':')[0]) : DEFAULT_GATHERING_HOUR;
-                const timeString = `${currentTime}:00 ${currentTime >= 12 ? 'PM' : 'AM'}`;
-
-                // Store confirmation in database
-                const confirmResult = await confirmGathering(memberId, interaction.user.username, today, currentTime);
                 
-                // Check if confirmation failed (likely due to foreign key constraint)
+                console.log(`   ✅ Confirmed by ${memberName} for ${currentTime}:00`);
+                
+                // Store confirmation in database
+                const confirmResult = await confirmGathering(memberId, memberName, today, currentTime);
                 if (!confirmResult) {
-                    return interaction.editReply({
-                        content: '❌ Error: User not found in database. Please contact an administrator to add you to the members database.'
-                    });
+                    console.log(`   ⚠️  Confirmation recorded (user sync pending)`);
                 }
 
-                // START GATHERING TRACKING
-                await startGatheringTracking(guild, currentTime);
-
-                await interaction.editReply({
-                    content: `✅ Gathering confirmed for ${timeString}! Tracking started...`
-                });
-
-                // Disable buttons after confirmation
-                const disabledButtons = new ActionRowBuilder().addComponents(
-                    new ButtonBuilder()
-                        .setCustomId('gather_confirm_disabled')
-                        .setLabel('✅ Confirmed')
-                        .setStyle(ButtonStyle.Success)
-                        .setDisabled(true),
-                    new ButtonBuilder()
-                        .setCustomId('gather_time_7pm_disabled')
-                        .setLabel('🕖 7:00 PM')
-                        .setStyle(ButtonStyle.Primary)
-                        .setDisabled(true),
-                    new ButtonBuilder()
-                        .setCustomId('gather_time_7_30pm_disabled')
-                        .setLabel('🕢 7:30 PM')
-                        .setStyle(ButtonStyle.Primary)
-                        .setDisabled(true),
-                    new ButtonBuilder()
-                        .setCustomId('gather_time_8pm_disabled')
-                        .setLabel('🕗 8:00 PM')
-                        .setStyle(ButtonStyle.Primary)
-                        .setDisabled(true),
-                    new ButtonBuilder()
-                        .setCustomId('gather_cancel_disabled')
-                        .setLabel('❌ Cancel')
-                        .setStyle(ButtonStyle.Danger)
-                        .setDisabled(true)
-                );
-
-                await interaction.message.edit({
-                    components: [disabledButtons]
-                });
-            } else if (interaction.customId === 'gather_cancel') {
-                // Store cancellation in database
-                await cancelGathering(today, memberId, interaction.user.username);
-
-                // Send cancellation embed to common-hall
-                const commonHallChannel = findCommonHallChannel(guild);
-                if (commonHallChannel) {
+                const embed = buildConfirmationEmbed(memberName, currentTime);
+                if (deferSuccess) {
                     try {
-                        const cancellationEmbed = buildCancellationEmbed(interaction.user.username);
-                        await commonHallChannel.send({ embeds: [cancellationEmbed] });
-                    } catch (channelError) {
-                        console.error('Error sending cancellation to common-hall:', channelError);
+                        await interaction.editReply({
+                            embeds: [embed],
+                        });
+                    } catch (replyErr) {
+                        console.warn(`Could not send confirmation embed: ${replyErr.message}`);
+                    }
+                } else {
+                    // Deferred failed, try to reply
+                    try {
+                        await interaction.reply({
+                            embeds: [embed],
+                            flags: MessageFlags.Ephemeral,
+                        }).catch(() => {});
+                    } catch (replyErr) {
+                        console.warn(`Could not reply with confirmation: ${replyErr.message}`);
                     }
                 }
 
-                await interaction.editReply({
-                    content: '✅ Gathering cancelled.'
-                });
+                // Schedule reminder and tracking
+                let hour = Math.floor(currentTime);
+                let minute = 0;
+                if (currentTime === 19.5) {
+                    hour = 19;
+                    minute = 30;
+                }
 
-                // Disable buttons after cancellation
-                const disabledButtons = new ActionRowBuilder().addComponents(
-                    new ButtonBuilder()
-                        .setCustomId('gather_confirm_disabled')
-                        .setLabel('✅ Confirm')
-                        .setStyle(ButtonStyle.Success)
-                        .setDisabled(true),
-                    new ButtonBuilder()
-                        .setCustomId('gather_time_7pm_disabled')
-                        .setLabel('🕖 7:00 PM')
-                        .setStyle(ButtonStyle.Primary)
-                        .setDisabled(true),
-                    new ButtonBuilder()
-                        .setCustomId('gather_time_7_30pm_disabled')
-                        .setLabel('🕢 7:30 PM')
-                        .setStyle(ButtonStyle.Primary)
-                        .setDisabled(true),
-                    new ButtonBuilder()
-                        .setCustomId('gather_time_8pm_disabled')
-                        .setLabel('🕗 8:00 PM')
-                        .setStyle(ButtonStyle.Primary)
-                        .setDisabled(true),
-                    new ButtonBuilder()
-                        .setCustomId('gather_cancel_disabled')
-                        .setLabel('❌ Cancelled')
-                        .setStyle(ButtonStyle.Danger)
-                        .setDisabled(true)
-                );
+                const now = getCurrentTimeInTimeZone();
+                const gatheringStart = new Date(now);
+                gatheringStart.setHours(hour, minute, 0, 0);
 
-                await interaction.message.edit({
-                    components: [disabledButtons]
-                });
+                if (gatheringStart <= now) {
+                    gatheringStart.setDate(gatheringStart.getDate() + 1);
+                }
+
+                // Schedule 5-minute reminder
+                const reminderDelay = gatheringStart.getTime() - new Date().getTime() - (REMINDER_MINUTES_BEFORE * 60 * 1000);
+                if (reminderDelay > 0) {
+                    setTimeout(() => {
+                        sendGatheringReminder(client, guild, currentTime);
+                    }, reminderDelay);
+                    console.log(`   📅 5-min reminder scheduled in ${Math.floor(reminderDelay / 60000)}m`);
+                }
+
+                // Schedule tracking start
+                const trackingDelay = gatheringStart.getTime() - new Date().getTime();
+                if (trackingDelay > 0) {
+                    setTimeout(() => {
+                        startGatheringTracking(guild, currentTime);
+                    }, trackingDelay);
+                    const trackHours = Math.floor(trackingDelay / (1000 * 60 * 60));
+                    const trackMins = Math.floor((trackingDelay % (1000 * 60 * 60)) / (1000 * 60));
+                    console.log(`   📅 Tracking scheduled in ${trackHours}h ${trackMins}m`);
+                }
+            } else if (interaction.customId === 'gather_cancel') {
+                console.log(`   ❌ Cancelled by ${memberName}`);
+                const cancelResult = await cancelGathering(today, memberId, memberName);
+                if (!cancelResult) {
+                    console.log(`   ⚠️  Cancellation recorded (user sync pending)`);
+                }
+                
+                const embed = buildCancellationEmbed(memberName);
+                if (deferSuccess) {
+                    try {
+                        await interaction.editReply({
+                            embeds: [embed],
+                        });
+                    } catch (replyErr) {
+                        console.warn(`Could not send cancellation embed: ${replyErr.message}`);
+                    }
+                } else {
+                    try {
+                        await interaction.reply({
+                            embeds: [embed],
+                            flags: MessageFlags.Ephemeral,
+                        }).catch(() => {});
+                    } catch (replyErr) {
+                        console.warn(`Could not reply with cancellation: ${replyErr.message}`);
+                    }
+                }
+            } else if (interaction.customId.startsWith('gather_time_')) {
+                let displayTime = '8:00 PM';
+                let timeStr = '20:00:00';
+                
+                if (interaction.customId === 'gather_time_7pm') {
+                    displayTime = '7:00 PM';
+                    timeStr = '19:00:00';
+                } else if (interaction.customId === 'gather_time_7_30pm') {
+                    displayTime = '7:30 PM';
+                    timeStr = '19:30:00';
+                } else if (interaction.customId === 'gather_time_8pm') {
+                    displayTime = '8:00 PM';
+                    timeStr = '20:00:00';
+                }
+
+                console.log(`   🕐 Time changed to ${displayTime}`);
+                const updateResult = await updateGatheringTime(today, timeStr);
+                if (!updateResult) {
+                    console.log(`   ⚠️  Time update recorded (user sync pending)`);
+                }
+                
+                if (deferSuccess) {
+                    try {
+                        await interaction.editReply({
+                            content: `✅ Gathering time updated to ${displayTime} by ${memberName}`,
+                        });
+                    } catch (replyErr) {
+                        console.warn(`Could not send time update: ${replyErr.message}`);
+                    }
+                } else {
+                    try {
+                        await interaction.reply({
+                            content: `✅ Gathering time updated to ${displayTime} by ${memberName}`,
+                            flags: MessageFlags.Ephemeral,
+                        }).catch(() => {});
+                    } catch (replyErr) {
+                        console.warn(`Could not reply with time update: ${replyErr.message}`);
+                    }
+                }
             }
         } catch (error) {
-            console.error('Error handling gathering button:', error);
-            if (!interaction.replied) {
-                await interaction.editReply({
-                    content: '❌ Error processing your response.'
-                });
+            console.error(`Error handling button:`, error.message);
+            // Only try to respond if we haven't already
+            try {
+                if (deferSuccess) {
+                    await interaction.editReply({
+                        content: `❌ An error occurred: ${error.message}`,
+                    }).catch(() => {}); // Silently fail if already replied
+                } else if (!interaction.replied && !interaction.deferred) {
+                    await interaction.reply({
+                        content: `❌ An error occurred: ${error.message}`,
+                        flags: MessageFlags.Ephemeral,
+                    }).catch(() => {}); // Silently fail if can't reply
+                }
+            } catch (replyError) {
+                // Silently ignore reply errors - interaction was already handled
             }
         }
     });
@@ -601,22 +677,24 @@ function handleVoiceStateUpdates(client) {
 
         if (joinedChannel) {
             // Member joined the gathering voice channel
-            if (!session.participants.has(member.user.id)) {
-                session.participants.set(member.user.id, {
-                    memberId: member.user.id,
+            if (!session.participants.has(member.id)) {
+                session.participants.set(member.id, {
+                    memberId: member.id,
                     username: member.user.username,
                     displayName: member.displayName || member.user.username,
-                    joinMs: Date.now(),
+                    joinMs: 0,  // They are joining now
                     durationMs: 0,
                 });
-                console.log(`✅ ${member.user.username} joined gathering`);
+                console.log(`   ✓ ${member.displayName || member.user.username} joined gathering`);
             }
         } else if (leftChannel) {
             // Member left the gathering voice channel
-            const participant = session.participants.get(member.user.id);
+            const participant = session.participants.get(member.id);
             if (participant) {
-                participant.durationMs += Date.now() - participant.joinMs;
-                console.log(`❌ ${member.user.username} left gathering - duration: ${formatDuration(participant.durationMs)}`);
+                const partialDuration = Date.now() - session.startMs - participant.joinMs;
+                participant.durationMs += partialDuration;
+                const minutes = Math.floor(participant.durationMs / 60000);
+                console.log(`   ✗ ${participant.displayName} left gathering (${minutes}m total)`);
             }
         }
     });
@@ -629,27 +707,26 @@ function handleGatheringScheduler(client) {
         
         let successCount = 0;
         for (const guild of guilds.values()) {
-            const tinkeringChannel = findTinkeringChannel(guild);
-            if (tinkeringChannel) {
+            try {
                 scheduleDailyGatheringPrompt(client, guild);
                 successCount++;
-            } else {
-                console.warn(`⚠️ Tinkering channel NOT found in ${guild.name}`);
+                console.log(`✓ ${guild.name} - gathering scheduler enabled`);
+            } catch (error) {
+                console.error(`❌ Error setting up scheduler for ${guild.name}:`, error.message);
             }
         }
-        console.log(`✓ Daily gathering scheduler initialized (${successCount}/${guilds.size} guilds)`);
+        console.log(`\n✓ Daily gathering scheduler initialized (${successCount}/${guilds.size} guilds)\n`);
     };
 
     // Try both events for maximum compatibility
     if (client.isReady()) {
         // If bot is already ready, schedule immediately
-        console.log('Bot already ready, setting up gathering scheduler now...');
+        console.log('🤖 Bot already ready, setting up gathering scheduler now...');
         setupScheduler();
     } else {
         // Otherwise wait for ready event
         const readyHandler = () => {
             setupScheduler();
-            // Remove listener after first use
             client.removeListener('ready', readyHandler);
             client.removeListener('clientReady', readyHandler);
         };
