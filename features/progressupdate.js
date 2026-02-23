@@ -190,8 +190,8 @@ module.exports = {
                         const pointsToAward = 5; // 5 points for successful code execution
                         
                         const todayKey = getTodayKey();
-                        const isRookie = await isRookieMember(message.guild, userId, username);
-                        const existingMember = isRookie ? null : await getMemberByDiscordUsername(username);
+                        const existingMember = await getMemberByDiscordUsername(username);
+                        const isRookie = existingMember ? false : await isRookieMember(message.guild, userId, username);
                         let newPoints = null;
 
                         if (isRookie) {

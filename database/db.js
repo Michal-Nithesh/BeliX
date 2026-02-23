@@ -117,27 +117,6 @@ async function getMemberByUsername(username) {
     }
 }
 
-async function getMemberByDiscordID(discordId) {
-    if (!dbAvailable) return null;
-    try {
-        const id = parseInt(discordId, 10);
-        const { data, error } = await supabase
-            .from('members')
-            .select('*')
-            .eq('members_discord_id', id)
-            .single();
-
-        // PGRST116 means no rows found
-        if (error && error.code !== 'PGRST116') {
-            console.error('Error fetching member by discord ID:', error);
-        }
-        return data || null;
-    } catch (error) {
-        console.error('Error getting member by discord ID:', error);
-        return null;
-    }
-}
-
 async function updateMemberBirthday(memberId, birthday) {
     if (!dbAvailable) return false;
     try {
@@ -243,15 +222,15 @@ async function addPoints(memberId, pointsToAdd) {
         const id = parseInt(memberId, 10);
         const timestamp = new Date().toISOString();
         
-        // Get current points from members table
+        // Get current points from members table using member_id
         const { data: member } = await supabase
             .from('members')
             .select('belmonts_points, member_id')
-            .eq('members_discord_id', id)
+            .eq('member_id', id)
             .single();
 
         if (!member) {
-            console.error('Member not found in members table:', id);
+            console.error('Member not found in members table. Member ID:', id);
             return null;
         }
 
@@ -265,7 +244,7 @@ async function addPoints(memberId, pointsToAdd) {
                 belmonts_points: newPoints,
                 updated_at: timestamp,
             })
-            .eq('members_discord_id', id);
+            .eq('member_id', id);
 
         if (memberError) {
             console.error('Failed to update members.belmonts_points:', memberError.message);
@@ -283,7 +262,7 @@ async function addPoints(memberId, pointsToAdd) {
             });
 
         if (pointsError) {
-            console.error('Failed to insert points log row:', pointsError.message);
+            console.error('Warning - Failed to insert points log row:', pointsError.message);
         }
         
         return newPoints;
@@ -861,11 +840,14 @@ async function updateMeetingEnd(meetingId, endData) {
 async function recordAttendance(meetingId, attendanceData) {
     if (!dbAvailable) return null;
     try {
+        // Ensure meetingId is included in the attendance data
+        const dataToInsert = Array.isArray(attendanceData) 
+            ? attendanceData.map(d => ({ ...d, meeting_id: meetingId }))
+            : [{ ...attendanceData, meeting_id: meetingId }];
+
         const { data, error } = await supabase
             .from('meeting_attendance')
-            .insert(
-                Array.isArray(attendanceData) ? attendanceData : [attendanceData]
-            )
+            .insert(dataToInsert)
             .select();
 
         if (error) {
@@ -1151,7 +1133,6 @@ module.exports = {
     syncMember,
     getMember,
     getMemberByUsername,
-    getMemberByDiscordID,
     updateMemberBirthday,
     updateMemberRole,
     getAllMembers,
