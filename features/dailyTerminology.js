@@ -82,8 +82,8 @@ async function postDailyTerminology(client) {
         console.log(`⚠ Terminology channel not found`);
     }
     
-    // Update index for next day (cycle through)
-    data.currentIndex = (data.currentIndex + 1) % data.terminologies.length;
+    // Update index for next day (continue incrementing)
+    data.currentIndex = data.currentIndex + 1;
     data.lastPostedDate = new Date().toISOString();
     saveTerminologies(data);
     
