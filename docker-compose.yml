@@ -1,0 +1,129 @@
+# Docker Compose for local development and optional production deployment
+#
+# Development:  docker-compose up
+# Production:   docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+#
+# Includes:
+# - BeliX Bot container
+# - Redis container (optional, for distributed caching)
+# - Volume mounts for logs and persistence
+
+version: '3.9'
+
+services:
+  # ========== MAIN BOT SERVICE ==========
+  belix-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    container_name: belix-bot
+    
+    # Environment variables
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      GUILD_ID: ${GUILD_ID}
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      CONSOLE_LOG_LEVEL: ${CONSOLE_LOG_LEVEL:-warn}
+      TZ: Asia/Kolkata
+      REDIS_ENABLED: ${REDIS_ENABLED:-false}
+      REDIS_URL: redis://redis:6379
+      ENABLE_SHARDING: ${ENABLE_SHARDING:-false}
+    
+    # Port mapping (Express server)
+    ports:
+      - "${BOT_PORT:-3000}:3000"
+    
+    # Volume mounts
+    volumes:
+      # Persist logs
+      - ./logs:/app/logs
+      # Mount local JSON files for hot-reload in dev
+      - ./json:/app/json
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 512M
+        reservations:
+          cpus: '1'
+          memory: 256M
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Depends on Redis if caching enabled
+    depends_on:
+      - redis
+    
+    networks:
+      - belix-network
+
+  # ========== OPTIONAL: REDIS SERVICE ==========
+  # Uncomment to use Redis for distributed caching
+  redis:
+    image: redis:7-alpine
+    
+    container_name: belix-redis
+    
+    # Command with persistence
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-belix-redis-dev}
+    
+    # Ports (usually not exposed to host in production)
+    ports:
+      - "6379:6379"
+    
+    # Volumes for data persistence
+    volumes:
+      - redis-data:/data
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 256M
+        reservations:
+          cpus: '0.5'
+          memory: 128M
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    
+    networks:
+      - belix-network
+
+networks:
+  belix-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local

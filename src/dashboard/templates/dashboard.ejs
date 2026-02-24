@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%237c3aed'>B</text></svg>" />
+  
+  <!-- Bootstrap for styling -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Chart.js for graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="/assets/css/style.css" />
+</head>
+<body class="bg-dark text-white">
+  <nav class="navbar navbar-dark bg-dark border-bottom border-secondary">
+    <div class="container-fluid">
+      <span class="navbar-brand mb-0 h1">📊 BeliX Analytics Dashboard</span>
+      <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-outline-secondary" onclick="refreshData()">
+          🔄 Refresh
+        </button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="exportData()">
+          📥 Export
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid py-4">
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+      <div class="col-md-3 mb-3">
+        <div class="card bg-dark border-secondary">
+          <div class="card-body">
+            <h6 class="card-title text-muted">Total Activities</h6>
+            <h2 class="card-text text-primary" id="totalActivities">-</h2>
+            <small class="text-muted">Last 30 days</small>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-3 mb-3">
+        <div class="card bg-dark border-secondary">
+          <div class="card-body">
+            <h6 class="card-title text-muted">Active Members</h6>
+            <h2 class="card-text text-success" id="activeMembers">-</h2>
+            <small class="text-muted">of <%= dashboard.metrics.totalMembers %></small>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-3 mb-3">
+        <div class="card bg-dark border-secondary">
+          <div class="card-body">
+            <h6 class="card-title text-muted">Engagement Rate</h6>
+            <h2 class="card-text text-warning" id="engagementRate">-</h2>
+            <small class="text-muted">Overall</small>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-3 mb-3">
+        <div class="card bg-dark border-secondary">
+          <div class="card-body">
+            <h6 class="card-title text-muted">Retention</h6>
+            <h2 class="card-text text-info" id="retentionRate">-</h2>
+            <small class="text-muted">Member retention</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row 1 -->
+    <div class="row mb-4">
+      <div class="col-lg-6 mb-4">
+        <div class="card bg-dark border-secondary">
+          <div class="card-header border-secondary">
+            <h5 class="mb-0">📈 Daily Activity</h5>
+          </div>
+          <div class="card-body">
+            <canvas id="dailyActivityChart" style="max-height: 300px;"></canvas>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-6 mb-4">
+        <div class="card bg-dark border-secondary">
+          <div class="card-header border-secondary">
+            <h5 class="mb-0">⭐ Points Growth</h5>
+          </div>
+          <div class="card-body">
+            <canvas id="pointsGrowthChart" style="max-height: 300px;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div class="row mb-4">
+      <div class="col-lg-6 mb-4">
+        <div class="card bg-dark border-secondary">
+          <div class="card-header border-secondary">
+            <h5 class="mb-0">🚀 Rookie Progression</h5>
+          </div>
+          <div class="card-body">
+            <canvas id="rookieProgressChart" style="max-height: 300px;"></canvas>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-6 mb-4">
+        <div class="card bg-dark border-secondary">
+          <div class="card-header border-secondary">
+            <h5 class="mb-0">👥 Active Members Over Time</h5>
+          </div>
+          <div class="card-body">
+            <canvas id="activeMembersChart" style="max-height: 300px;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row 3 -->
+    <div class="row mb-4">
+      <div class="col-lg-12 mb-4">
+        <div class="card bg-dark border-secondary">
+          <div class="card-header border-secondary">
+            <h5 class="mb-0">🎮 Command Usage</h5>
+          </div>
+          <div class="card-body">
+            <canvas id="commandUsageChart" style="max-height: 300px;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Movers -->
+    <div class="row mb-4">
+      <div class="col-lg-12">
+        <div class="card bg-dark border-secondary">
+          <div class="card-header border-secondary">
+            <h5 class="mb-0">🏆 Top Movers (Last 7 Days)</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-dark table-striped">
+                <thead>
+                  <tr>
+                    <th>Rank Change</th>
+                    <th>Username</th>
+                    <th>Current Rank</th>
+                    <th>Previous Rank</th>
+                    <th>Points</th>
+                  </tr>
+                </thead>
+                <tbody id="topMoversTable">
+                  <tr>
+                    <td colspan="5" class="text-center">Loading...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center text-muted mt-4 pb-4">
+      <small>Last updated: <%= generatedAt %></small>
+      <br />
+      <small>BeliX Analytics Dashboard v1.0</small>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Chart scripts -->
+  <script>
+    const apiBaseUrl = '/admin/api';
+    let charts = {};
+
+    async function loadDashboard() {
+      try {
+        // Load all data
+        await Promise.all([
+          loadDailyActivity(),
+          loadPointsGrowth(),
+          loadRookieProgress(),
+          loadActiveMembersChart(),
+          loadCommandUsage(),
+          loadTopMovers(),
+          loadSummary(),
+        ]);
+      } catch (error) {
+        console.error('Dashboard load error:', error);
+        alert('Failed to load dashboard data');
+      }
+    }
+
+    async function loadDailyActivity() {
+      const response = await fetch(`${apiBaseUrl}/activity?days=30`);
+      const json = await response.json();
+      
+      if (charts.dailyActivity) {
+        charts.dailyActivity.destroy();
+      }
+
+      const ctx = document.getElementById('dailyActivityChart').getContext('2d');
+      charts.dailyActivity = new Chart(ctx, {
+        type: 'line',
+        data: json.data,
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: { legend: { labels: { color: '#fff' } } },
+          scales: {
+            y: { ticks: { color: '#999' }, grid: { color: '#333' } },
+            x: { ticks: { color: '#999' }, grid: { color: '#333' } },
+          },
+        },
+      });
+    }
+
+    async function loadPointsGrowth() {
+      const response = await fetch(`${apiBaseUrl}/points-growth?days=30`);
+      const json = await response.json();
+      
+      if (charts.pointsGrowth) {
+        charts.pointsGrowth.destroy();
+      }
+
+      const ctx = document.getElementById('pointsGrowthChart').getContext('2d');
+      charts.pointsGrowth = new Chart(ctx, {
+        type: 'line',
+        data: json.data,
+        options: {
+          responsive: true,
+          plugins: { legend: { labels: { color: '#fff' } } },
+          scales: {
+            y: { ticks: { color: '#999' }, grid: { color: '#333' } },
+            x: { ticks: { color: '#999' }, grid: { color: '#333' } },
+          },
+        },
+      });
+    }
+
+    async function loadRookieProgress() {
+      const response = await fetch(`${apiBaseUrl}/rookie-progress?days=30`);
+      const json = await response.json();
+      
+      if (charts.rookieProgress) {
+        charts.rookieProgress.destroy();
+      }
+
+      const ctx = document.getElementById('rookieProgressChart').getContext('2d');
+      charts.rookieProgress = new Chart(ctx, {
+        type: 'bar',
+        data: json.data,
+        options: {
+          responsive: true,
+          plugins: { legend: { labels: { color: '#fff' } } },
+          scales: {
+            y: { ticks: { color: '#999' }, grid: { color: '#333' } },
+            x: { ticks: { color: '#999' }, grid: { color: '#333' } },
+          },
+        },
+      });
+    }
+
+    async function loadActiveMembersChart() {
+      const response = await fetch(`${apiBaseUrl}/active-members?days=30`);
+      const json = await response.json();
+      
+      if (charts.activeMembers) {
+        charts.activeMembers.destroy();
+      }
+
+      const ctx = document.getElementById('activeMembersChart').getContext('2d');
+      charts.activeMembers = new Chart(ctx, {
+        type: 'area',
+        data: json.data,
+        options: {
+          responsive: true,
+          plugins: { legend: { labels: { color: '#fff' } } },
+          scales: {
+            y: { ticks: { color: '#999' }, grid: { color: '#333' } },
+            x: { ticks: { color: '#999' }, grid: { color: '#333' } },
+          },
+        },
+      });
+    }
+
+    async function loadCommandUsage() {
+      const response = await fetch(`${apiBaseUrl}/command-usage?days=30&limit=15`);
+      const json = await response.json();
+      
+      if (charts.commandUsage) {
+        charts.commandUsage.destroy();
+      }
+
+      const ctx = document.getElementById('commandUsageChart').getContext('2d');
+      charts.commandUsage = new Chart(ctx, {
+        type: 'bar',
+        data: json.data,
+        options: {
+          responsive: true,
+          indexAxis: 'y',
+          plugins: { legend: { labels: { color: '#fff' } } },
+          scales: {
+            x: { ticks: { color: '#999' }, grid: { color: '#333' } },
+            y: { ticks: { color: '#999' }, grid: { color: '#333' } },
+          },
+        },
+      });
+    }
+
+    async function loadTopMovers() {
+      const response = await fetch(`${apiBaseUrl}/summary?days=30`);
+      const json = await response.json();
+      
+      const tbody = document.getElementById('topMoversTable');
+      tbody.innerHTML = json.data.topMovers.map(member => `
+        <tr>
+          <td>
+            <span class="${member.rankChange > 0 ? 'text-success' : 'text-danger'}">
+              ${member.rankChange > 0 ? '📈 ↑' : '📉 ↓'} ${Math.abs(member.rankChange)}
+            </span>
+          </td>
+          <td>${member.username}</td>
+          <td>#${member.currentRank}</td>
+          <td>#${member.previousRank || 'N/A'}</td>
+          <td>${member.points.toLocaleString()}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function loadSummary() {
+      const response = await fetch(`${apiBaseUrl}/summary?days=30`);
+      const json = await response.json();
+      
+      document.getElementById('totalActivities').textContent = json.data.metrics.totalActivities;
+      document.getElementById('activeMembers').textContent = json.data.metrics.activeMembers;
+      document.getElementById('engagementRate').textContent = json.data.metrics.engagementRate;
+      document.getElementById('retentionRate').textContent = json.data.retention.retentionRate;
+    }
+
+    function refreshData() {
+      window.location.reload();
+    }
+
+    async function exportData() {
+      const format = prompt('Export format (json or csv):', 'json');
+      if (format) {
+        window.location.href = `${apiBaseUrl}/export?format=${format}&days=30`;
+      }
+    }
+
+    // Load on page load
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+  </script>
+</body>
+</html>

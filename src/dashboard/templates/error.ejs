@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Error - BeliX Dashboard</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%237c3aed'>B</text></svg>" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background: linear-gradient(135deg, #1e1e2e 0%, #2d1b4e 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .error-container {
+      max-width: 600px;
+      width: 100%;
+      padding: 20px;
+    }
+    .error-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 67, 67, 0.3);
+      border-radius: 12px;
+      padding: 40px;
+      backdrop-filter: blur(10px);
+    }
+    .error-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+    .error-title {
+      color: #ff6b6b;
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+    .error-message {
+      color: #ccc;
+      font-size: 16px;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+    .error-details {
+      background: rgba(0, 0, 0, 0.3);
+      border-left: 3px solid #ff6b6b;
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #ff9999;
+      word-break: break-all;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .btn-back {
+      margin-top: 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      padding: 10px 30px;
+      border-radius: 6px;
+      color: white;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s;
+    }
+    .btn-back:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+      text-decoration: none;
+      color: white;
+    }
+  </style>
+</head>
+<body class="text-white">
+  <div class="error-container">
+    <div class="error-card">
+      <div class="error-icon">⚠️</div>
+      <div class="error-title">Oops! Something went wrong</div>
+      <div class="error-message">
+        <% if (message) { %>
+          <%= message %>
+        <% } else { %>
+          An unexpected error occurred while loading the dashboard. Please try again later.
+        <% } %>
+      </div>
+      <% if (error && process.env.NODE_ENV === 'development') { %>
+        <div class="error-details">
+          <strong>Error Details:</strong><br/>
+          <%= error %>
+        </div>
+      <% } %>
+      <div>
+        <a href="/" class="btn-back">← Go Back</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

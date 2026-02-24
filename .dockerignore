@@ -1,0 +1,58 @@
+# Docker Build Context Ignore File
+# 
+# Excludes files from Docker build context
+# Improves build speed and image size
+
+# Version control
+.git/
+.gitignore
+.gitattributes
+
+# Dependencies (install fresh in Docker)
+node_modules/
+npm-debug.log
+npm-error.log
+package-lock.json.bak
+
+# Development
+.env.local
+.env.*.local
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs (can be large)
+logs/
+*.log
+
+# Testing
+.jest/
+coverage/
+test-results/
+
+# Build artifacts
+dist/
+build/
+.next/
+
+# Documentation
+README.md
+docs/
+*.md
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.circleci/
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose*.yml
+
+# PM2
+ecosystem.config.js
+.pm2/
