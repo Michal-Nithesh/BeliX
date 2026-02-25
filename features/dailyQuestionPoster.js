@@ -89,18 +89,30 @@ function createQuestionEmbed(question) {
 async function postDailyQuestion(client) {
   try {
     const question = getQuestionForDay();
-    if (!question) return;
+    if (!question) {
+      console.warn('⚠️ No question available for today');
+      return;
+    }
     
     const embed = createQuestionEmbed(question);
     
     // Post to all guilds in the vibe-code channel
+    if (client.guilds.cache.size === 0) {
+      console.warn('⚠️ Bot not connected to any guilds');
+      return;
+    }
+
+    let postedCount = 0;
     for (const guild of client.guilds.cache.values()) {
       const channelId = process.env['vibe-coding'];
       let channel = null;
+      
       if (channelId) {
         channel = guild.channels.cache.get(channelId);
-      } else {
-        // Fallback to name matching
+      }
+      
+      // Fallback to name matching
+      if (!channel) {
         channel = guild.channels.cache.find(ch => 
           ch.name.toLowerCase().includes('vibe') && 
           ch.name.toLowerCase().includes('code') &&
@@ -115,10 +127,17 @@ async function postDailyQuestion(client) {
             embeds: [embed]
           });
           console.log(`✓ Posted daily question to ${guild.name}`);
+          postedCount++;
         } catch (error) {
           console.error(`Error posting to ${guild.name}:`, error.message);
         }
+      } else {
+        console.warn(`⚠️ vibe-code channel not found in guild: ${guild.name}`);
       }
+    }
+    
+    if (postedCount === 0) {
+      console.error('❌ Failed to post daily question to any guild');
     }
   } catch (error) {
     console.error('Error in postDailyQuestion:', error);
