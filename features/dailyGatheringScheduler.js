@@ -1,4 +1,4 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, MessageFlags } = require('discord.js');
 const { getDelayUntilNextScheduledTime, getCurrentTimeInTimeZone } = require('../utils/timezoneUtils');
 const { 
     confirmGathering, 
@@ -183,12 +183,22 @@ async function startMeetingTracking(client, gatheringDate, gatheringTime) {
             return;
         }
 
+        // Set start time to the confirmed gathering time, not the current time
+        const now = getCurrentTimeInTimeZone();
+        const startTime = new Date(now);
+        startTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+        
+        // If gathering time is in the past today, it must be for tomorrow
+        if (startTime <= now) {
+            startTime.setDate(startTime.getDate() + 1);
+        }
+
         gatheringSession.meetingId = meeting.meeting_id;
         gatheringSession.isActive = true;
-        gatheringSession.startTime = new Date();
+        gatheringSession.startTime = startTime;
         gatheringSession.attendees.clear();
 
-        console.log(`✓ Meeting tracking started (ID: ${gatheringSession.meetingId})`);
+        console.log(`✓ Meeting tracking started (ID: ${gatheringSession.meetingId}) at ${startTime.toLocaleTimeString()}`);
     } catch (error) {
         console.error(`Error starting meeting tracking:`, error.message);
     }
@@ -426,7 +436,7 @@ async function handleGatheringTimeSelection(client, interaction) {
                 .setDescription(`Today's gathering has been cancelled by ${displayName}`)
                 .setTimestamp();
 
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
             // Notify common-hall
             const channel = client.channels.cache.get(COMMON_HALL_CHANNEL_ID);
@@ -455,7 +465,7 @@ async function handleGatheringTimeSelection(client, interaction) {
                 .setFooter({ text: `Set by: ${displayName}` })
                 .setTimestamp();
 
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
             // Post announcement
             await postGatheringAnnouncement(client, gatheringTime);
