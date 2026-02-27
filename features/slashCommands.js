@@ -70,7 +70,6 @@ function buildHelpEmbed() {
             { name: '/next', value: 'Preview the next terminology (without changing today\'s).' },
             { name: '/prev', value: 'Preview the previous terminology.' },
             { name: '/dailyquestions', value: 'View today\'s daily programming question.' },
-            { name: '/rookiequestions', value: 'View today\'s rookie question number.' },
             { name: '/question <number>', value: 'View a specific question (1-129) with full details.' },
             { name: '/qd <difficulty>', value: 'Filter questions by difficulty level (Easy/Medium).' }
         )
@@ -83,7 +82,7 @@ function buildRookieHelpEmbed() {
         .setTitle('🎯 Rookie Commands')
         .setDescription('As a rookie member, here\'s your available command:')
         .addFields(
-            { name: '/rookiequestions', value: 'View today\'s rookie question with full details and explanation.' }
+            { name: '/dailyquestions', value: 'View today\'s daily programming question with full details and explanation.' }
         )
         .setFooter({ text: '🚀 Focus on learning and growth!' })
         .setTimestamp();
@@ -181,22 +180,6 @@ function getTodaysQuestion() {
     // Find the question with matching Day number
     const todayQuestion = questions.find(q => q.Day === currentDayNumber);
     return todayQuestion || questions[0];
-}
-
-function getTodaysRookieQuestionNumber() {
-    const data = loadQuestionsData();
-    const startDate = new Date(data.startDate);
-    const today = new Date();
-    
-    // Calculate days elapsed since start date
-    const timeDiff = today - startDate;
-    const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-    
-    // Start from 10 and increase by 1 each day
-    const startQuestionNumber = data.startQuestionNumber || 109;
-    const todayRookieNumber = startQuestionNumber + daysDiff;
-    
-    return todayRookieNumber;
 }
 
 function buildQuestionsEmbed(questions, startIndex = 0, itemsPerPage = 5) {
@@ -357,9 +340,6 @@ function buildCommands() {
             .setName('dailyquestions')
             .setDescription('View today\'s daily programming question.'),
         new SlashCommandBuilder()
-            .setName('rookiequestions')
-            .setDescription('View today\'s rookie question number.'),
-        new SlashCommandBuilder()
             .setName('question')
             .setDescription('Get a specific programming question by number (1-129).')
             .addIntegerOption(option =>
@@ -496,10 +476,10 @@ function handleSlashCommands(client) {
         const username = interaction.user.username;
         const isRookie = await isRookieMember(interaction.guild, userId, username);
         
-        // Rookies can only use /rookiequestions and /help commands
-        if (isRookie && commandName !== 'rookiequestions' && commandName !== 'help') {
+        // Rookies can only use /dailyquestions and /help commands
+        if (isRookie && commandName !== 'dailyquestions' && commandName !== 'help') {
             return interaction.editReply({
-                content: '⚠️ As a rookie member, you only have access to the `/rookiequestions` command. Focus on learning and solving problems! 🚀'
+                content: '⚠️ As a rookie member, you only have access to the `/dailyquestions` command. Focus on learning and solving problems! 🚀'
             });
         }
 
@@ -612,23 +592,6 @@ function handleSlashCommands(client) {
             }
             
             const embed = buildQuestionDetailEmbed(todayQuestion);
-            return interaction.editReply({ embeds: [embed] });
-        }
-
-        if (commandName === 'rookiequestions') {
-            const rookieQuestionNumber = getTodaysRookieQuestionNumber();
-            const questions = loadQuestions();
-            
-            // Find the rookie question by number
-            const rookieQuestion = questions.find(q => q.Day === rookieQuestionNumber);
-            
-            if (!rookieQuestion) {
-                return interaction.editReply({
-                    content: `❌ Today's rookie question #${rookieQuestionNumber} not found.`
-                });
-            }
-            
-            const embed = buildQuestionDetailEmbed(rookieQuestion);
             return interaction.editReply({ embeds: [embed] });
         }
 

@@ -7,6 +7,8 @@ const {
     getGatheringStatus,
     createMeeting,
     updateMeetingEnd,
+    updateMeetingTime,
+    getMeetingByDate,
     recordAttendance,
     getMember,
     addPoints
@@ -170,30 +172,66 @@ async function startMeetingTracking(client, gatheringDate, gatheringTime) {
         const meetingTitle = `Daily Gathering - ${gatheringDate}`;
         const [hours, minutes] = gatheringTime.split(':');
 
-        // Use current time as the actual start_time when meeting begins
-        const now = getCurrentTimeInTimeZone();
-        const startTime = new Date(now);
+        // Check if a meeting already exists for this date
+        let meeting = await getMeetingByDate(gatheringDate);
+        
+        if (meeting && meeting.meeting_id) {
+            // Meeting already exists, update the time
+            console.log(`📝 Meeting already exists for ${gatheringDate}, updating time...`);
+            const timeStr = `${hours}:${minutes}:00`;
+            const updated = await updateMeetingTime(meeting.meeting_id, timeStr);
+            
+            if (updated) {
+                // Calculate the actual meeting start time
+                const now = getCurrentTimeInTimeZone();
+                const meetingStartTime = new Date(now);
+                meetingStartTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+                if (meetingStartTime <= now) {
+                    meetingStartTime.setDate(meetingStartTime.getDate() + 1);
+                }
 
-        const meetingData = {
-            title: meetingTitle,
-            meeting_date: gatheringDate,
-            meeting_time: `${hours}:${minutes}:00`,
-            start_time: startTime.toISOString(),
-        };
+                gatheringSession.meetingId = meeting.meeting_id;
+                gatheringSession.isActive = true;
+                gatheringSession.startTime = meetingStartTime;  // Use actual meeting time
+                gatheringSession.attendees.clear();
+                console.log(`✓ Meeting time updated to ${gatheringTime} (ID: ${gatheringSession.meetingId})`);
+            } else {
+                console.error(`Failed to update meeting time`);
+                return;
+            }
+        } else {
+            // Create new meeting
+            const now = getCurrentTimeInTimeZone();
+            // Calculate the actual meeting start time (not current time)
+            const meetingStartTime = new Date(now);
+            meetingStartTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+            
+            // If the meeting time is in the past, it's for tomorrow
+            if (meetingStartTime <= now) {
+                meetingStartTime.setDate(meetingStartTime.getDate() + 1);
+            }
 
-        // Create meeting in database
-        const meeting = await createMeeting(meetingData);
-        if (!meeting) {
-            console.error(`Failed to create meeting`);
-            return;
+            const meetingData = {
+                title: meetingTitle,
+                meeting_date: gatheringDate,
+                meeting_time: `${hours}:${minutes}:00`,
+                start_time: meetingStartTime.toISOString(),
+            };
+
+            // Create meeting in database
+            meeting = await createMeeting(meetingData);
+            if (!meeting || !meeting.meeting_id) {
+                console.error(`Failed to create meeting`);
+                return;
+            }
+
+            gatheringSession.meetingId = meeting.meeting_id;
+            gatheringSession.isActive = true;
+            gatheringSession.startTime = meetingStartTime;  // Use actual meeting time for tracking
+            gatheringSession.attendees.clear();
+
+            console.log(`✓ New meeting tracking started (ID: ${gatheringSession.meetingId}) at ${meetingStartTime.toLocaleTimeString()}`);
         }
-
-        gatheringSession.meetingId = meeting.meeting_id;
-        gatheringSession.isActive = true;
-        gatheringSession.startTime = startTime;
-        gatheringSession.attendees.clear();
-
-        console.log(`✓ Meeting tracking started (ID: ${gatheringSession.meetingId}) at ${startTime.toLocaleTimeString()}`);
     } catch (error) {
         console.error(`Error starting meeting tracking:`, error.message);
     }
@@ -427,6 +465,13 @@ async function endGatheringAndReport(client) {
  */
 async function handleGatheringTimeSelection(client, interaction) {
     try {
+        // Defer the interaction immediately to avoid timeout
+        if (!interaction.deferred && !interaction.replied) {
+            await interaction.deferReply({ ephemeral: true }).catch(err => {
+                console.warn(`⚠ Failed to defer interaction:`, err.message);
+            });
+        }
+
         const customId = interaction.customId;
         const userId = interaction.user.id;
         const member = interaction.member;
@@ -459,7 +504,9 @@ async function handleGatheringTimeSelection(client, interaction) {
                 .setDescription(`Today's gathering has been cancelled by ${displayName}`)
                 .setTimestamp();
 
-            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+            await interaction.editReply({ embeds: [embed] }).catch(err => {
+                console.warn(`⚠ Failed to edit reply:`, err.message);
+            });
 
             // Notify common-hall
             const channel = client.channels.cache.get(COMMON_HALL_CHANNEL_ID);
@@ -488,7 +535,9 @@ async function handleGatheringTimeSelection(client, interaction) {
                 .setFooter({ text: `Set by: ${displayName}` })
                 .setTimestamp();
 
-            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+            await interaction.editReply({ embeds: [embed] }).catch(err => {
+                console.warn(`⚠ Failed to edit reply:`, err.message);
+            });
 
             // Post announcement
             await postGatheringAnnouncement(client, gatheringTime);
@@ -531,17 +580,47 @@ async function handleGatheringTimeSelection(client, interaction) {
 
             // Start meeting tracking
             const dateStr = getCurrentTimeInTimeZone().toISOString().split('T')[0];
+            console.log(`📋 Starting meeting tracking for ${dateStr} at ${time}...`);
             await startMeetingTracking(client, dateStr, time);
+            
+            // Check if meeting tracking started successfully
+            if (!gatheringSession.meetingId) {
+                console.error(`❌ Failed to start meeting tracking`);
+                await interaction.followUp({ 
+                    content: '⚠️ Warning: Meeting tracking may have failed. Please report this issue.',
+                    ephemeral: true 
+                }).catch(err => console.warn(`Could not send follow-up:`, err.message));
+                return;
+            }
 
             // Schedule end after 2 hours (or earlier if everyone leaves)
+            if (gatheringSession.endTimeout) {
+                clearTimeout(gatheringSession.endTimeout);
+            }
             gatheringSession.endTimeout = setTimeout(() => {
+                console.log(`⏰ 2-hour timeout reached, ending gathering...`);
                 endGatheringAndReport(client);
             }, 2 * 60 * 60 * 1000);
 
-            console.log(`✓ Gathering confirmed for ${gatheringTime}`);
+            console.log(`✓ Gathering confirmed for ${gatheringTime} with tracking ID ${gatheringSession.meetingId}`);
         }
     } catch (error) {
         console.error(`Error handling gathering time selection:`, error.message);
+        
+        // Try to reply with error if interaction is still available
+        if (interaction && !interaction.replied && !interaction.deferred) {
+            try {
+                await interaction.reply({ content: '⚠️ An error occurred while setting the gathering time. Please try again.', ephemeral: true });
+            } catch (replyErr) {
+                console.warn(`Could not send error reply:`, replyErr.message);
+            }
+        } else if (interaction && interaction.deferred) {
+            try {
+                await interaction.editReply({ content: '⚠️ An error occurred while setting the gathering time. Please try again.' });
+            } catch (editErr) {
+                console.warn(`Could not send error edit:`, editErr.message);
+            }
+        }
     }
 }
 
@@ -556,9 +635,21 @@ function handleGatheringScheduler(client) {
     });
 
     // Handle button interactions
-    client.on('interactionCreate', (interaction) => {
-        if (interaction.customId?.startsWith('gathering_')) {
-            handleGatheringTimeSelection(client, interaction);
+    client.on('interactionCreate', async (interaction) => {
+        try {
+            if (interaction.customId?.startsWith('gathering_')) {
+                await handleGatheringTimeSelection(client, interaction);
+            }
+        } catch (error) {
+            console.error(`Error in interactionCreate handler:`, error.message);
+            // Try to respond with error, but don't crash if interaction is invalid
+            if (interaction && !interaction.replied && !interaction.deferred) {
+                try {
+                    await interaction.reply({ content: '⚠️ An error occurred processing your request.', ephemeral: true });
+                } catch (replyErr) {
+                    console.warn(`Could not send error reply:`, replyErr.message);
+                }
+            }
         }
     });
 }
