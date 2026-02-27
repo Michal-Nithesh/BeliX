@@ -108,20 +108,16 @@ create table public.meetings (
   title text not null,
   meeting_date date not null,
   meeting_time time without time zone not null,
-  scheduled_time time without time zone null,
   start_time timestamp with time zone null,
   end_time timestamp with time zone null,
   duration_minutes integer null,
-  total_members integer not null default 0,
   attended_members integer not null default 0,
-  metadata jsonb null,
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now(),
   constraint meetings_pkey primary key (meeting_id)
 ) TABLESPACE pg_default;
 
 create index IF not exists idx_meetings_date on public.meetings using btree (meeting_date) TABLESPACE pg_default;
-
 
 -- Meeting attendance table to track individual member attendance
 create table public.meeting_attendance (

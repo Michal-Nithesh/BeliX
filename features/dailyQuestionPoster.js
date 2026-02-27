@@ -111,11 +111,11 @@ async function postDailyQuestion(client) {
         channel = guild.channels.cache.get(channelId);
       }
       
-      // Fallback to name matching
+      // Fallback: search for channel containing "vibe-coding" or similar pattern
       if (!channel) {
         channel = guild.channels.cache.find(ch => 
-          ch.name.toLowerCase().includes('vibe') && 
-          ch.name.toLowerCase().includes('code') &&
+          (ch.name.toLowerCase().includes('vibe-coding') ||
+           (ch.name.toLowerCase().includes('vibe') && ch.name.toLowerCase().includes('coding'))) &&
           ch.isTextBased()
         );
       }
@@ -132,7 +132,7 @@ async function postDailyQuestion(client) {
           console.error(`Error posting to ${guild.name}:`, error.message);
         }
       } else {
-        console.warn(`⚠️ vibe-code channel not found in guild: ${guild.name}`);
+        console.warn(`⚠️ vibe-coding channel not found in guild: ${guild.name}`);
       }
     }
     
@@ -165,8 +165,13 @@ function scheduleQuestionPost(client) {
   console.log(`📅 Daily question scheduler initialized (Next: ${hoursLeft}h ${minutesLeft}m at 8:00 AM Asia/Kolkata)`);
 }
 
-module.exports = {
-  setupDailyQuestion: (client) => {
+function setupDailyQuestion(client) {
+  client.once('ready', () => {
+    console.log('✓ Daily question scheduler initialized');
     scheduleQuestionPost(client);
-  }
+  });
+}
+
+module.exports = {
+  setupDailyQuestion
 };
