@@ -7,7 +7,9 @@ const {
     getGatheringStatus,
     createMeeting,
     updateMeetingEnd,
-    recordAttendance
+    recordAttendance,
+    getMember,
+    addPoints
 } = require('../database/db');
 
 // Channel IDs
@@ -168,12 +170,15 @@ async function startMeetingTracking(client, gatheringDate, gatheringTime) {
         const meetingTitle = `Daily Gathering - ${gatheringDate}`;
         const [hours, minutes] = gatheringTime.split(':');
 
+        // Use current time as the actual start_time when meeting begins
+        const now = getCurrentTimeInTimeZone();
+        const startTime = new Date(now);
+
         const meetingData = {
             title: meetingTitle,
             meeting_date: gatheringDate,
             meeting_time: `${hours}:${minutes}:00`,
-            total_members: 0,
-            attended_members: 0,
+            start_time: startTime.toISOString(),
         };
 
         // Create meeting in database
@@ -181,16 +186,6 @@ async function startMeetingTracking(client, gatheringDate, gatheringTime) {
         if (!meeting) {
             console.error(`Failed to create meeting`);
             return;
-        }
-
-        // Set start time to the confirmed gathering time, not the current time
-        const now = getCurrentTimeInTimeZone();
-        const startTime = new Date(now);
-        startTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-        
-        // If gathering time is in the past today, it must be for tomorrow
-        if (startTime <= now) {
-            startTime.setDate(startTime.getDate() + 1);
         }
 
         gatheringSession.meetingId = meeting.meeting_id;
@@ -275,7 +270,7 @@ async function endGatheringAndReport(client) {
 
         const endTime = new Date();
         const startTime = gatheringSession.startTime;
-        const totalDurationMs = endTime - startTime;
+        const totalDurationMs = Math.abs(endTime - startTime);
         const totalDurationMinutes = Math.floor(totalDurationMs / (1000 * 60));
         const hours = Math.floor(totalDurationMinutes / 60);
         const minutes = totalDurationMinutes % 60;
@@ -293,9 +288,9 @@ async function endGatheringAndReport(client) {
             const durationMinutes = Math.floor(durationMs / (1000 * 60));
             const attendancePercentage = Math.round((durationMinutes / totalDurationMinutes) * 100);
 
-            // Award points for 80%+ attendance
+            // Award points: 10 points for 50%+ attendance
             let pointsAwarded = 0;
-            if (attendancePercentage >= 80) {
+            if (attendancePercentage >= 50) {
                 pointsAwarded = 10;
                 if (attendancePercentage >= 95) {
                     fullyAttendedCount++;
@@ -312,8 +307,17 @@ async function endGatheringAndReport(client) {
 
             // Record attendance in database
             try {
+                // Get the database member_id by looking up the Discord ID
+                const member = await getMember(userId);
+                const memberId = member ? member.member_id : null;
+
+                if (!memberId) {
+                    console.warn(`Warning: Member ${userId} (${attendee.displayName}) not found in database, skipping attendance record`);
+                    continue;
+                }
+
                 const attendanceData = {
-                    member_id: userId,
+                    member_id: memberId,
                     username: attendee.username,
                     display_name: attendee.displayName,
                     joined_at: attendee.joinedAt.toISOString(),
@@ -323,6 +327,12 @@ async function endGatheringAndReport(client) {
                     points_awarded: pointsAwarded,
                 };
                 await recordAttendance(gatheringSession.meetingId, attendanceData);
+                
+                // Add points to member if they earned any
+                if (pointsAwarded > 0) {
+                    await addPoints(memberId, pointsAwarded);
+                    console.log(`✓ Added ${pointsAwarded} points to ${attendee.displayName}`);
+                }
             } catch (error) {
                 console.error(`Error recording attendance for ${attendee.displayName}:`, error.message);
             }
@@ -335,33 +345,46 @@ async function endGatheringAndReport(client) {
         const embed = new EmbedBuilder()
             .setColor('#10B981')
             .setTitle(`📊 Final Meeting Report`)
-            .addFields(
-                { 
-                    name: `📝 Daily Gathering - ${getCurrentTimeInTimeZone().toLocaleDateString()}`, 
-                    value: `🎙️ Channel: Common Hall\n⏱️ Total: ${hours}h ${minutes}m\n👥 Attendees: ${gatheringSession.attendees.size}`, 
-                    inline: false 
-                }
-            );
-
-        // Add attendance details
-        if (attendanceRecords.length > 0) {
-            let attendanceText = ``;
-            attendanceRecords.forEach((record, index) => {
-                const medal = record.attendancePercentage >= 95 ? `⭐` : ``;
-                attendanceText += `• ${record.displayName} - ${record.durationMinutes}m (${record.attendancePercentage}%) ${medal}\n`;
-            });
-
-            embed.addFields({
-                name: `👥 Complete Attendance:`,
-                value: attendanceText || 'No attendees',
+            .addFields({
+                name: `📅 Daily Gathering - ${getCurrentTimeInTimeZone().toLocaleDateString()}`,
+                value: `🎙️ Channel: Common Hall`,
                 inline: false
+            })
+            .addFields({
+                name: `⏱️ Meeting Duration`,
+                value: `${hours}h ${minutes}m`,
+                inline: true
+            })
+            .addFields({
+                name: `👥 Total Attendees`,
+                value: `${gatheringSession.attendees.size}`,
+                inline: true
             });
+
+        // Add attendance details in chunks to avoid Discord field limit
+        if (attendanceRecords.length > 0) {
+            const chunkSize = 20; // Split attendees into chunks of 20
+            for (let i = 0; i < attendanceRecords.length; i += chunkSize) {
+                const chunk = attendanceRecords.slice(i, i + chunkSize);
+                let attendanceText = ``;
+                chunk.forEach((record) => {
+                    const medal = record.attendancePercentage >= 95 ? `⭐` : ``;
+                    attendanceText += `${medal} **${record.displayName}** - ${record.durationMinutes}m (${record.attendancePercentage}%)\n`;
+                });
+
+                const fieldName = i === 0 ? `📋 Attendance List` : `📋 Attendance List (cont'd)`;
+                embed.addFields({
+                    name: fieldName,
+                    value: attendanceText || 'No attendees',
+                    inline: false
+                });
+            }
         }
 
         embed.addFields({
-            name: `📈 Summary`,
-            value: `Total: ${gatheringSession.attendees.size} | Full (95%+): ${fullyAttendedCount}`,
-            inline: false
+            name: `⭐ Full Attendance (95%+)`,
+            value: `${fullyAttendedCount} members`,
+            inline: true
         });
 
         embed.setFooter({ text: 'Meeting concluded' })

@@ -775,8 +775,7 @@ async function createMeeting(meetingData) {
             title,
             meeting_date,
             meeting_time,
-            scheduled_time,
-            total_members,
+            start_time,
         } = meetingData;
 
         const { data, error } = await supabase
@@ -785,8 +784,7 @@ async function createMeeting(meetingData) {
                 title,
                 meeting_date,
                 meeting_time,
-                scheduled_time,
-                total_members,
+                start_time,
                 attended_members: 0,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
